@@ -35,7 +35,7 @@ id:{tagline:"Makeup Artist · Booking",swipe:"‹ geser untuk ganti bulan ›",s
  s4:"Jam berapa Kakak harus sudah siap?",s4d:"Pilih jam Kakak harus sudah selesai dirias. Jam mulai makeup kami yang atur (±{d} sebelumnya).",s4h:"Jam yang dicoret sudah terisi jadwal lain.",until:"Siap jam {t}",
  s5:"Lokasi & data Kakak",loc:"Di mana dirias?",studio:"Di studio",studioD:"Tanpa biaya tambahan",home:"Datang ke lokasi Kakak",homeD:"Biaya transport ditambahkan",
  area:"Area lokasi",inCity:"Dalam kota",outCity:"Luar kota",address:"Alamat lengkap",addressPh:"Nama gedung / rumah, jalan, kecamatan",you:"Data Kakak",
- name:"Nama",namePh:"Nama Kakak",wa:"Nomor WhatsApp",waPh:"08xx xxxx xxxx",note:"Catatan (opsional)",notePh:"Misal: pakai hijab, kulit sensitif, referensi look",
+ name:"Nama",namePh:"Nama Kakak",wa:"Nomor WhatsApp",waPh:"08xx xxxx xxxx / +92…",note:"Catatan (opsional)",notePh:"Misal: pakai hijab, kulit sensitif, referensi look",
  errName:"Isi nama dulu ya",errWa:"Nomor WhatsApp belum benar",errAddr:"Isi alamat lokasi ya",
  s6:"Cek lagi & bayar DP",s6d:"Bayar DP 50% untuk mengunci jadwal. Sisanya dibayar di hari acara.",
  service:"Layanan",pkg:"Paket",date:"Tanggal",time:"Siap jam",location:"Lokasi",subtotal:"Paket × {n} orang",transport:"Transport",total:"Total",dueNow:"Bayar sekarang (DP 50%)",remain:"Sisa dibayar di hari H",
@@ -85,7 +85,7 @@ en:{tagline:"Makeup Artist · Booking",swipe:"‹ swipe to change month ›",ste
  s4:"What time do you need to be ready?",s4d:"Pick the time your makeup must be finished. We plan the start time (about {d} before).",s4h:"Crossed-out times are already booked.",until:"Ready by {t}",
  s5:"Location & your details",loc:"Where will the makeup be done?",studio:"At the studio",studioD:"No extra charge",home:"At your location",homeD:"Travel fee added",
  area:"Area",inCity:"In town",outCity:"Out of town",address:"Full address",addressPh:"Venue / house, street, district",you:"Your details",
- name:"Name",namePh:"Your name",wa:"WhatsApp number",waPh:"08xx xxxx xxxx",note:"Notes (optional)",notePh:"E.g. wearing hijab, sensitive skin, look reference",
+ name:"Name",namePh:"Your name",wa:"WhatsApp number",waPh:"08xx xxxx xxxx / +92…",note:"Notes (optional)",notePh:"E.g. wearing hijab, sensitive skin, look reference",
  errName:"Please enter your name",errWa:"That WhatsApp number doesn't look right",errAddr:"Please enter the address",
  s6:"Review & pay deposit",s6d:"Pay a 50% deposit to lock in the slot. The rest is paid on the day.",
  service:"Service",pkg:"Package",date:"Date",time:"Ready by",location:"Location",subtotal:"Package × {n} people",transport:"Travel",total:"Total",dueNow:"Pay now (50% deposit)",remain:"Remaining, paid on the day",
@@ -261,7 +261,7 @@ function s5(){
   view.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{S.loc=b.dataset.l;render()});
   view.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{S.area=b.dataset.a;render()});
 }
-function valid5(){const d=S.wa.replace(/\D/g,"");S.errs={name:!S.name.trim(),wa:!/^(0|62)8\d{7,11}$/.test(d),addr:S.loc==="home"&&!S.addr.trim()};return !S.errs.name&&!S.errs.wa&&!S.errs.addr}
+function valid5(){const d=S.wa.replace(/\D/g,"");S.errs={name:!S.name.trim(),wa:!(/^(0|62)8\d{7,11}$/.test(d)||(S.wa.trim().startsWith("+")&&d.length>=10&&d.length<=15)),addr:S.loc==="home"&&!S.addr.trim()};return !S.errs.name&&!S.errs.wa&&!S.errs.addr}
 
 function qrSvg(){
   const r=rnd(98321),n=25,c=[];
@@ -299,7 +299,7 @@ function s6(){
 async function saveBooking(){
   const r=await api("book",{method:"POST",body:{svc:S.svc,pkg:S.pkg,people:S.n,date:S.date,ready:S.time,loc:S.loc,area:S.area,addr:S.addr,name:S.name,wa:S.wa,note:S.note,pay:PAY[S.pay]}});
   resetAvailability();
-  return {code:r.code,date:r.date,name:r.name,wa:r.wa,ready:r.ready_min,start:r.start_min,note:r.note,payMethod:r.pay_method};
+  return {code:r.code,date:r.date,name:r.name,wa:r.wa,ready:r.ready_min,start:r.start_min,note:r.note,payMethod:r.pay_method,waClient:r.wa_client||"",waAlert:r.wa_alert||"",calendar:r.calendar};
 }
 
 function s7(){
@@ -310,12 +310,15 @@ function s7(){
   const invUrl="admin.html#inv-"+b.code;
   view.innerHTML=`<div class="done"><div class="tick">✓</div><h1>${t("doneT")}</h1><p class="sub">${t("doneD",{n:esc(v.name),w:esc(v.wa)})}</p>
    <div class="card" style="display:inline-block;padding:10px 18px">${t("code")}: <b>${b.code}</b></div></div>
-   <section class="demo"><h2>${t("demoClient")}</h2><div class="wa"><div class="hd"><div class="av">💄</div><div class="nm">Shimmernaya<small>Business account</small></div></div>
+   <section class="demo"><h2>${LANG==="id"?"Status pengiriman (tes)":"Delivery status (test)"}</h2>
+    ${[[LANG==="id"?"WhatsApp konfirmasi ke klien":"WhatsApp confirmation to client",b.waClient],[LANG==="id"?"WhatsApp notifikasi ke MUA":"WhatsApp alert to artist",b.waAlert],["Google Calendar",b.calendar?"ok":"failed"]]
+      .map(([k,v])=>`<div class="row"><span>${k}</span><span style="color:${/^(ok|text|template)$/.test(v)?"var(--ok)":"var(--err)"}">${/^(ok|text|template)$/.test(v)?"✓ "+(LANG==="id"?"terkirim":"sent"):"✕ "+esc(v||"-")}</span></div>`).join("")}</section>
+   <section class="demo" hidden><h2>${t("demoClient")}</h2><div class="wa"><div class="hd"><div class="av">💄</div><div class="nm">Shimmernaya<small>Business account</small></div></div>
     <div class="body"><div class="bub">${esc(t("waClient",v))}<span class="tm">${clock}</span></div></div></div></section>
-   <section class="demo"><h2>${t("demoArtist")}</h2><div class="wa"><div class="hd"><div class="av">🔔</div><div class="nm">Booking Bot<small>${LANG==="id"?"Notifikasi otomatis":"Automatic alert"}</small></div></div>
+   <section class="demo" hidden><h2>${t("demoArtist")}</h2><div class="wa"><div class="hd"><div class="av">🔔</div><div class="nm">Booking Bot<small>${LANG==="id"?"Notifikasi otomatis":"Automatic alert"}</small></div></div>
     <div class="body"><div class="bub">${esc(t("waArtist",v))}<span class="tm">${clock}</span></div>
     <div class="bub">${esc(t("invReady",{inv:invNo(b)}))}\n<a href="${invUrl}">${t("openInv")} →</a><span class="tm">${clock}</span></div></div></div></section>
-   <section class="demo"><h2>${t("demoCal")}</h2><div class="ev"><div class="strip"></div><div style="min-width:0">
+   <section class="demo" hidden><h2>${t("demoCal")}</h2><div class="ev"><div class="strip"></div><div style="min-width:0">
     <div class="t">💄 ${esc(v.svc)} – ${esc(v.name)} (${S.n})</div>
     <div class="m">${v.date} · ${v.start} – ${v.ready}</div><div class="m">📍 ${esc(v.loc)}</div><div class="m">${b.code}</div></div></div></section>
    <a class="btn" href="${invUrl}" style="display:block;margin-top:22px">📄 ${t("openInv")}</a>

@@ -6,6 +6,7 @@
 //          POST ?a=save                      (create/update manual booking or block)
 //          POST ?a=delete                    {id}
 //          POST ?a=invoice                   {id, items, discount, dp, inv_note, inv?}
+//          POST ?a=send_invoice              {id, pdf(base64), filename} -> WhatsApp document to client
 //          GET  ?a=pin                       (check PIN)
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
@@ -32,6 +33,9 @@ const SERVICES: Record<string, { n: [string, string]; extra: number; pk: Record<
     two: { n: ["2 look", "2 looks"], p: 850000, m: 180 } } },
 };
 const TRANSPORT: Record<string, number> = { in: 100000, out: 250000 };
+const WA_PHONE_ID = "1348722084991999";   // Meta TEST number +1 555-629-1539
+const ALERT_TO = "923487962818";          // who gets the "new booking" alert (test)
+const ADMIN_URL = "https://fixngoltd-rgb.github.io/shimmernaya-makeup/admin.html#inv-";
 
 const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "content-type, x-admin-pin", "Access-Control-Allow-Methods": "GET, POST, OPTIONS" };
@@ -76,6 +80,68 @@ function toLocal(ms: number) { const d = new Date(ms + OFFSET * 60000); return {
 const addDays = (date: string, n: number) => new Date(Date.parse(date + "T00:00:00Z") + n * 864e5).toISOString().slice(0, 10);
 const todayWIB = () => toLocal(Date.now()).date;
 const hm = (m: number) => `${pad(Math.floor(m / 60))}.${pad(m % 60)}`;
+const DAYS = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+const MONTHS = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+const fmtDate = (d: string) => { const x = new Date(d + "T00:00:00Z"); return `${DAYS[x.getUTCDay()]}, ${x.getUTCDate()} ${MONTHS[x.getUTCMonth()]} ${x.getUTCFullYear()}`; };
+const rp = (n: number) => "Rp" + Math.round(n || 0).toLocaleString("id-ID");
+// Indonesian numbers (08.. / 628..) or any international number written with +
+function validWa(raw: string) { const d = raw.replace(/\D/g, ""); return /^(0|62)8\d{7,11}$/.test(d) || (raw.trim().startsWith("+") && d.length >= 10 && d.length <= 15); }
+function waNum(raw: string) { let d = String(raw || "").replace(/\D/g, ""); if (d.startsWith("0")) d = "62" + d.slice(1); return d; }
+
+/* ---------- WhatsApp (Cloud API) ---------- */
+let waTok = "";
+async function waToken() { if (waTok) return waTok; const { data } = await db.rpc("wa_token"); if (!data) throw new Error("WhatsApp token missing"); return (waTok = data as string); }
+async function waPost(path: string, body: unknown) {
+  const r = await fetch(`https://graph.facebook.com/v21.0/${path}`, { method: "POST", headers: { Authorization: `Bearer ${await waToken()}`, "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const j = await r.json().catch(() => ({}));
+  return r.ok ? { ok: true, id: j.messages?.[0]?.id } : { ok: false, code: j.error?.code, msg: j.error?.error_data?.details || j.error?.message || String(r.status) };
+}
+const clean = (s: string) => String(s ?? "").replace(/[\n\t]+/g, " ").replace(/ {4,}/g, "   ").trim() || "-";
+// Approved template first; if the template isn't approved yet, plain text (works inside the 24h chat window)
+async function waTemplateOrText(to: string, name: string, params: string[], fallback: string, button?: string) {
+  const comps: any[] = [{ type: "body", parameters: params.map((t) => ({ type: "text", text: clean(t) })) }];
+  if (button) comps.push({ type: "button", sub_type: "url", index: "0", parameters: [{ type: "text", text: button }] });
+  const t = await waPost(`${WA_PHONE_ID}/messages`, { messaging_product: "whatsapp", to, type: "template", template: { name, language: { code: "id" }, components: comps } });
+  if (t.ok) return "template";
+  const x = await waPost(`${WA_PHONE_ID}/messages`, { messaging_product: "whatsapp", to, type: "text", text: { body: fallback, preview_url: true } });
+  if (x.ok) return "text";
+  console.error("whatsapp failed", name, t.code, t.msg, x.code, x.msg);
+  return "failed: " + (x.code === 131047 ? "no chat in last 24h" : x.code === 131030 ? "number not on Meta test list" : x.msg);
+}
+async function notifyBooking(b: any) {
+  const date = fmtDate(b.date), ready = hm(b.ready_min), start = hm(b.start_min), dp = rp(b.dp);
+  const label = `${b.label_id}${b.people > 1 ? ` (${b.people} orang)` : ""}`;
+  const [client, alert] = await Promise.all([
+    waTemplateOrText(waNum(b.wa), "booking_dp_received", [b.name, dp, b.code, date, ready],
+      `Halo Kak ${b.name}! 💕\nDP ${dp} untuk booking ${b.code} sudah kami terima ✅\n\n📅 ${date}\n⏰ Kakak siap jam ${ready}\n\nJadwal Kakak sudah dikunci. Invoice resmi menyusul dari kami setelah dicek, dan H-1 kami kabari jam mulai makeup. Sampai ketemu! 🤍\n— Shimmernaya`),
+    waTemplateOrText(ALERT_TO, "new_booking_alert", [b.name, b.wa, label, date, ready, start, b.loc, dp],
+      `🔔 Booking baru, DP sudah masuk\n\n👤 ${b.name} (${b.wa})\n💄 ${label}\n📅 ${date}\n⏰ Klien siap jam ${ready}, saran mulai makeup ${start}\n📍 ${b.loc}\n💰 DP ${dp}${b.note ? `\n📝 ${b.note}` : ""}\n\nSudah masuk Google Calendar.\nCek & kirim invoice: ${ADMIN_URL}${b.code}`, b.code),
+  ]);
+  await db.from("bookings").update({ wa_client: client, wa_alert: alert }).eq("id", b.id);
+  b.wa_client = client; b.wa_alert = alert;
+}
+async function sendInvoice(p: any) {
+  const { data: b } = await db.from("bookings").select("*").eq("id", p.id).single();
+  if (!b) throw new HttpError(404, "not found");
+  if (!b.wa) throw new HttpError(400, "no WhatsApp number on this booking");
+  const bytes = Uint8Array.from(atob(String(p.pdf || "")), (c) => c.charCodeAt(0));
+  if (bytes.length < 500 || bytes.length > 5e6) throw new HttpError(400, "bad pdf");
+  const filename = String(p.filename || `Invoice-${b.code}.pdf`).replace(/[^\w.\-]/g, "_");
+  const fd = new FormData();
+  fd.append("messaging_product", "whatsapp"); fd.append("type", "application/pdf");
+  fd.append("file", new Blob([bytes], { type: "application/pdf" }), filename);
+  const up = await fetch(`https://graph.facebook.com/v21.0/${WA_PHONE_ID}/media`, { method: "POST", headers: { Authorization: `Bearer ${await waToken()}` }, body: fd });
+  const uj = await up.json(); if (!up.ok) throw new HttpError(502, "upload failed: " + (uj.error?.message || up.status));
+  const caption = `Halo Kak ${b.name}, ini invoice resmi untuk booking ${b.code} (${fmtDate(b.date)}). Terima kasih sudah memilih Shimmernaya 🤍`;
+  const r = await waPost(`${WA_PHONE_ID}/messages`, { messaging_product: "whatsapp", to: waNum(b.wa), type: "document", document: { id: uj.id, filename, caption } });
+  if (!r.ok) {
+    const why = r.code === 131047 ? "window" : r.code === 131030 ? "not_test_number" : "other";
+    await db.from("bookings").update({ wa_invoice: "failed: " + why }).eq("id", b.id);
+    throw new HttpError(409, why + ": " + r.msg);
+  }
+  const { data } = await db.from("bookings").update({ wa_invoice: "sent", inv: "sent", updated_at: new Date().toISOString() }).eq("id", b.id).select().single();
+  return data;
+}
 
 type Ev = { id: string; date: string; start: number; end: number; title: string; allDay: boolean; ours: string | null };
 // Every event in her Google Calendar, split per local day
@@ -155,7 +221,7 @@ async function book(p: any) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(p.date) || p.date <= todayWIB()) throw new HttpError(400, "bad date");
   if (start < EARLIEST || ready > DAY_END) throw new HttpError(400, "bad time");
   const name = String(p.name || "").trim().slice(0, 80), wa = String(p.wa || "").trim().slice(0, 30);
-  if (!name || !/^(0|62)8\d{7,11}$/.test(wa.replace(/\D/g, ""))) throw new HttpError(400, "bad contact");
+  if (!name || !validWa(wa)) throw new HttpError(400, "bad contact");
   const busy = (await busyMap(p.date, p.date))[p.date] || [];
   if (clashes(busy, start, ready)) throw new HttpError(409, "slot taken");
   const area = p.loc === "home" ? (p.area === "out" ? "out" : "in") : null;
@@ -171,6 +237,7 @@ async function book(p: any) {
   }).select().single();
   if (error) throw error;
   b.calendar = await syncEvent(b);
+  try { await notifyBooking(b); } catch (e) { console.error("notify failed", String(e)); }
   return b;
 }
 
@@ -251,6 +318,7 @@ Deno.serve(async (req) => {
     if (a === "save") return json(await save(body));
     if (a === "delete") return json(await del(body));
     if (a === "invoice") return json(await invoice(body));
+    if (a === "send_invoice") return json(await sendInvoice(body));
     throw new HttpError(404, "unknown action");
   } catch (e) {
     const status = e instanceof HttpError ? e.status : 500;

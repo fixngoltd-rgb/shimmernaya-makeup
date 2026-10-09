@@ -85,7 +85,7 @@ id:{tagline:"Admin · Kalender",cal:"Kalender",invTab:"Invoice",addB:"+ Booking 
  errReq:"Lengkapi yang bertanda ini",errTime:"Jam mulai harus sebelum jam siap",errClash:"Bentrok dengan jadwal lain di jam itu",
  invList:"Invoice",invListD:"Booking baru masuk sebagai \"Perlu dicek\". Cek dulu, ubah kalau perlu, lalu kirim ke klien.",noInv:"Belum ada invoice. Coba buat booking di halaman booking atau tambah booking manual.",
  invT:"Invoice {n}",items:"Rincian",addItem:"+ Tambah baris",desc:"Keterangan",qty:"Jml",price:"Harga",discount:"Diskon (Rp)",invNote:"Catatan di invoice",
- preview:"Preview",pdf:"Unduh PDF",sendWa:"Kirim ke WhatsApp klien",markSent:"Tandai sudah terkirim",saved:"Tersimpan",sentOk:"Ditandai terkirim",
+ preview:"Preview",pdf:"Unduh PDF",sendWa:"Kirim ke WhatsApp klien",sending:"Mengirim…",sentWaOk:"Invoice terkirim ke WhatsApp klien ✓",sendFail:"Belum terkirim otomatis: {r}",whyWindow:"klien belum chat dalam 24 jam terakhir",whyTest:"nomor klien belum ada di daftar nomor tes Meta",shareManual:"Kirim manual lewat HP",markSent:"Tandai sudah terkirim",saved:"Tersimpan",sentOk:"Ditandai terkirim",
  shareHelp:"Di HP: pilih WhatsApp lalu chat klien. Kalau tidak muncul, PDF diunduh dan WhatsApp klien dibuka — tinggal lampirkan PDF-nya.",
  waText:"Halo Kak {name}! Ini invoice untuk booking {code} ({date}). Terima kasih 🤍 — Shimmernaya",
  demoNote:"Mode tes: terhubung ke Google Calendar pooltrialwp@gmail.com. Semua yang disimpan di sini langsung masuk ke Google Calendar dan menutup jam di halaman booking.",
@@ -102,7 +102,7 @@ en:{tagline:"Admin · Calendar",cal:"Calendar",invTab:"Invoices",addB:"+ Manual 
  errReq:"Please fill in the marked fields",errTime:"Start time must be before the ready time",errClash:"Clashes with another entry at that time",
  invList:"Invoices",invListD:"New bookings come in as \"To review\". Check them, edit if needed, then send to the client.",noInv:"No invoices yet. Make a booking on the booking page or add a manual booking.",
  invT:"Invoice {n}",items:"Line items",addItem:"+ Add line",desc:"Description",qty:"Qty",price:"Price",discount:"Discount (Rp)",invNote:"Note on invoice",
- preview:"Preview",pdf:"Download PDF",sendWa:"Send to client's WhatsApp",markSent:"Mark as sent",saved:"Saved",sentOk:"Marked as sent",
+ preview:"Preview",pdf:"Download PDF",sendWa:"Send to client's WhatsApp",sending:"Sending…",sentWaOk:"Invoice sent to client's WhatsApp ✓",sendFail:"Not sent automatically: {r}",whyWindow:"the client hasn't messaged in the last 24 hours",whyTest:"the client's number isn't on Meta's test list",shareManual:"Send manually from phone",markSent:"Mark as sent",saved:"Saved",sentOk:"Marked as sent",
  shareHelp:"On a phone: choose WhatsApp, then the client's chat. If that doesn't appear, the PDF downloads and the client's WhatsApp opens — just attach the PDF.",
  waText:"Hi {name}! Here's the invoice for booking {code} ({date}). Thank you 🤍 — Shimmernaya",
  demoNote:"Test mode: connected to Google Calendar pooltrialwp@gmail.com. Everything saved here goes straight into Google Calendar and closes those times on the booking page.",
@@ -140,7 +140,7 @@ async function mutate(btn,fn){
   catch(e){if(btn){btn.disabled=false;btn.textContent=t("save")}throw e}
 }
 const labelOf=b=>b.src==="block"?(b.reason||t("block")):(b.label?.[LANG]||b.label?.id||"");
-const go=(v,extra={})=>{Object.assign(A,{view:v,confirm:false,errs:{}},extra);render();scrollTo(0,0)};
+const go=(v,extra={})=>{Object.assign(A,{view:v,confirm:false,errs:{},sendErr:null},extra);render();scrollTo(0,0)};
 
 function render(){
   document.getElementById("tagline").textContent=t("tagline");
@@ -317,7 +317,7 @@ function invoice(){
    <div class="label">${t("preview")}</div>
    <div id="pv">${invHtml(b,d,x)}</div>
    <div class="actions"><button class="btn" id="send">📲 ${t("sendWa")}</button></div>
-   <p class="hint">${t("shareHelp")}</p>
+   ${A.sendErr?`<p class="notice">${esc(t("sendFail",{r:A.sendErr}))}</p><div class="actions"><button class="btn ghost" id="manual">📤 ${t("shareManual")}</button></div><p class="hint">${t("shareHelp")}</p>`:""}
    <div class="actions"><button class="btn ghost" id="sv">${t("save")}</button><button class="btn ghost" id="pdf">⬇ ${t("pdf")}</button>${b.inv!=="sent"?`<button class="btn ghost" id="mk">✓ ${t("markSent")}</button>`:""}</div>`;
   const q=s=>view.querySelector(s);
   const refresh=()=>{q("#pv").innerHTML=invHtml(b,d,totals({...b,...d}))};
@@ -334,6 +334,17 @@ function invoice(){
   q("#pdf").onclick=()=>{downloadPdf(local());persist().catch(()=>{})};
   if(q("#mk")) q("#mk").onclick=async()=>{try{await persist({inv:"sent"});toast(t("sentOk"));A.inv=null;render()}catch(e){toast(t("netErr"))}};
   q("#send").onclick=async()=>{
+    const btn=q("#send"); btn.disabled=true; btn.innerHTML=`<span class="spin"></span> ${t("sending")}`;
+    try{
+      await persist(); const bb=local(), blob=pdfBlob(bb);
+      const b64=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result).split(",")[1]);fr.onerror=rej;fr.readAsDataURL(blob)});
+      await api("send_invoice",{method:"POST",pin:PIN,body:{id:b.id,pdf:b64,filename:invNo(bb)+".pdf"}});
+      await refresh(); A.sendErr=null; A.inv=null; toast(t("sentWaOk")); render();
+    }catch(e){
+      const m=String(e.message||e); A.sendErr=m.startsWith("window")?t("whyWindow"):m.startsWith("not_test_number")?t("whyTest"):m; render();
+    }
+  };
+  if(q("#manual")) q("#manual").onclick=async()=>{
     const bb=local(), blob=pdfBlob(bb), name=invNo(bb)+".pdf";
     const text=t("waText",{name:bb.name,code:bb.code,date:fmtShort(bb.date)});
     let shared=false;
