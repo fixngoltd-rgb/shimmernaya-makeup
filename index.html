@@ -299,7 +299,7 @@ function s6(){
 async function saveBooking(){
   const r=await api("book",{method:"POST",body:{svc:S.svc,pkg:S.pkg,people:S.n,date:S.date,ready:S.time,loc:S.loc,area:S.area,addr:S.addr,name:S.name,wa:S.wa,note:S.note,pay:PAY[S.pay]}});
   resetAvailability();
-  return {code:r.code,date:r.date,name:r.name,wa:r.wa,ready:r.ready_min,start:r.start_min,note:r.note,payMethod:r.pay_method,waClient:r.wa_client||"",waAlert:r.wa_alert||"",calendar:r.calendar};
+  return {code:r.code,date:r.date,name:r.name,wa:r.wa,ready:r.ready_min,start:r.start_min,note:r.note,payMethod:r.pay_method,waClient:r.wa_client||"",waAlert:r.wa_alert||"",calendar:r.calendar,tgLink:r.tg_link||"",tgAlert:r.tg_alert||""};
 }
 
 function s7(){
@@ -310,9 +310,11 @@ function s7(){
   const invUrl="admin.html#inv-"+b.code;
   view.innerHTML=`<div class="done"><div class="tick">✓</div><h1>${t("doneT")}</h1><p class="sub">${t("doneD",{n:esc(v.name),w:esc(v.wa)})}</p>
    <div class="card" style="display:inline-block;padding:10px 18px">${t("code")}: <b>${b.code}</b></div></div>
+   ${b.tgLink?`<a class="btn" href="${b.tgLink}" target="_blank" rel="noopener" style="display:block;margin-top:18px;background:#229ED9;color:#fff">📲 ${LANG==="id"?"Dapatkan konfirmasi di Telegram":"Get your confirmation on Telegram"}</a>
+    <p class="hint" style="text-align:center;margin-top:8px">${LANG==="id"?"Tes: pengganti WhatsApp. Tap, lalu tekan Start.":"Test stand-in for WhatsApp. Tap it, then press Start."}</p>`:""}
    <section class="demo"><h2>${LANG==="id"?"Status pengiriman (tes)":"Delivery status (test)"}</h2>
-    ${[[LANG==="id"?"WhatsApp konfirmasi ke klien":"WhatsApp confirmation to client",b.waClient],[LANG==="id"?"WhatsApp notifikasi ke MUA":"WhatsApp alert to artist",b.waAlert],["Google Calendar",b.calendar?"ok":"failed"]]
-      .map(([k,v])=>`<div class="row"><span>${k}</span><span style="color:${/^(ok|text|template)$/.test(v)?"var(--ok)":"var(--err)"}">${/^(ok|text|template)$/.test(v)?"✓ "+(LANG==="id"?"terkirim":"sent"):"✕ "+esc(v||"-")}</span></div>`).join("")}</section>
+    ${[[LANG==="id"?"Notifikasi ke MUA (Telegram)":"Alert to artist (Telegram)",b.tgAlert],["Google Calendar",b.calendar?"ok":"failed"]]
+      .map(([k,v])=>`<div class="row"><span>${k}</span><span style="color:${/^(ok|text|template|sent)$/.test(v)?"var(--ok)":"var(--err)"}">${/^(ok|text|template|sent)$/.test(v)?"✓ "+(LANG==="id"?"terkirim":"sent"):"✕ "+esc(v||"-")}</span></div>`).join("")}</section>
    <section class="demo" hidden><h2>${t("demoClient")}</h2><div class="wa"><div class="hd"><div class="av">💄</div><div class="nm">Shimmernaya<small>Business account</small></div></div>
     <div class="body"><div class="bub">${esc(t("waClient",v))}<span class="tm">${clock}</span></div></div></div></section>
    <section class="demo" hidden><h2>${t("demoArtist")}</h2><div class="wa"><div class="hd"><div class="av">🔔</div><div class="nm">Booking Bot<small>${LANG==="id"?"Notifikasi otomatis":"Automatic alert"}</small></div></div>

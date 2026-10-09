@@ -36,6 +36,8 @@ const TRANSPORT: Record<string, number> = { in: 100000, out: 250000 };
 const WA_PHONE_ID = "1348722084991999";   // Meta TEST number +1 555-629-1539
 const ALERT_TO = "923487962818";          // who gets the "new booking" alert (test)
 const ADMIN_URL = "https://fixngoltd-rgb.github.io/shimmernaya-makeup/admin.html#inv-";
+// TEST: messages go over Telegram (@shimmernaya_test_bot) until her WhatsApp Business is verified
+const CHANNEL: "telegram" | "whatsapp" = "telegram";
 
 const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "content-type, x-admin-pin", "Access-Control-Allow-Methods": "GET, POST, OPTIONS" };
@@ -108,7 +110,32 @@ async function waTemplateOrText(to: string, name: string, params: string[], fall
   console.error("whatsapp failed", name, t.code, t.msg, x.code, x.msg);
   return "failed: " + (x.code === 131047 ? "no chat in last 24h" : x.code === 131030 ? "number not on Meta test list" : x.msg);
 }
+/* ---------- Telegram (test channel) ---------- */
+let tgTok = "";
+async function tgToken() { if (tgTok) return tgTok; const { data } = await db.rpc("tg_token"); if (!data) throw new Error("Telegram token missing"); return (tgTok = data as string); }
+async function tgCall(method: string, body: unknown) {
+  const r = await fetch(`https://api.telegram.org/bot${await tgToken()}/${method}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  return await r.json();
+}
+async function setting(key: string) { const { data } = await db.from("settings").select("value").eq("key", key).maybeSingle(); return data?.value ?? null; }
+async function notifyTelegram(b: any) {
+  const date = fmtDate(b.date), ready = hm(b.ready_min), start = hm(b.start_min), dp = rp(b.dp);
+  const label = `${b.label_id}${b.people > 1 ? ` (${b.people} orang)` : ""}`;
+  const text = `🔔 Booking baru, DP sudah masuk\n\n👤 ${b.name} (${b.wa})\n💄 ${label}\n📅 ${date}\n⏰ Klien siap jam ${ready}, saran mulai makeup ${start}\n📍 ${b.loc}\n💰 DP ${dp}${b.note ? `\n📝 ${b.note}` : ""}\n\n✅ Sudah masuk Google Calendar\nKode: ${b.code}`;
+  const chats: number[] = (await setting("tg_admin_chats")) || [];
+  let alert = chats.length ? "sent" : "failed: no admin linked to the bot yet";
+  for (const c of chats) {
+    const r = await tgCall("sendMessage", { chat_id: c, text, reply_markup: { inline_keyboard: [[{ text: "📄 Cek & kirim invoice", url: ADMIN_URL + b.code }]] } });
+    if (!r.ok) alert = "failed: " + (r.description || "telegram error");
+  }
+  const bot = await setting("tg_bot_username");
+  b.tg_link = bot ? `https://t.me/${bot}?start=${b.code}` : null;
+  b.tg_alert = alert;
+  await db.from("bookings").update({ tg_alert: alert }).eq("id", b.id);
+}
+
 async function notifyBooking(b: any) {
+  if (CHANNEL === "telegram") return notifyTelegram(b);
   const date = fmtDate(b.date), ready = hm(b.ready_min), start = hm(b.start_min), dp = rp(b.dp);
   const label = `${b.label_id}${b.people > 1 ? ` (${b.people} orang)` : ""}`;
   const [client, alert] = await Promise.all([
@@ -123,6 +150,20 @@ async function notifyBooking(b: any) {
 async function sendInvoice(p: any) {
   const { data: b } = await db.from("bookings").select("*").eq("id", p.id).single();
   if (!b) throw new HttpError(404, "not found");
+  if (CHANNEL === "telegram") {
+    if (!b.tg_chat) throw new HttpError(409, "no_tg: client hasn't connected Telegram for this booking");
+    const bytes = Uint8Array.from(atob(String(p.pdf || "")), (c) => c.charCodeAt(0));
+    if (bytes.length < 500 || bytes.length > 5e6) throw new HttpError(400, "bad pdf");
+    const filename = String(p.filename || `Invoice-${b.code}.pdf`).replace(/[^\w.\-]/g, "_");
+    const fd = new FormData();
+    fd.append("chat_id", String(b.tg_chat));
+    fd.append("caption", `Halo Kak ${b.name}, ini invoice resmi untuk booking ${b.code} (${fmtDate(b.date)}). Terima kasih sudah memilih Shimmernaya 🤍`);
+    fd.append("document", new Blob([bytes], { type: "application/pdf" }), filename);
+    const r = await fetch(`https://api.telegram.org/bot${await tgToken()}/sendDocument`, { method: "POST", body: fd }).then((x) => x.json());
+    if (!r.ok) throw new HttpError(502, "telegram: " + (r.description || "send failed"));
+    const { data } = await db.from("bookings").update({ wa_invoice: "sent (telegram)", inv: "sent", updated_at: new Date().toISOString() }).eq("id", b.id).select().single();
+    return data;
+  }
   if (!b.wa) throw new HttpError(400, "no WhatsApp number on this booking");
   const bytes = Uint8Array.from(atob(String(p.pdf || "")), (c) => c.charCodeAt(0));
   if (bytes.length < 500 || bytes.length > 5e6) throw new HttpError(400, "bad pdf");
