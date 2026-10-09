@@ -155,6 +155,7 @@ function cal(){
   bindTabs();
   view.querySelector("#pm").onclick=()=>{A.month--;render()};
   view.querySelector("#nm").onclick=()=>{A.month++;render()};
+  attachSwipe(view.querySelector(".cal"));
   view.querySelectorAll(".day").forEach(b=>b.onclick=()=>{A.sel=b.dataset.ds;render()});
   view.querySelectorAll(".item").forEach(b=>b.onclick=()=>go("detail",{id:b.dataset.id}));
   view.querySelector("#addB").onclick=()=>go("form",{form:newForm()});

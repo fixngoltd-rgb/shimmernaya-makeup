@@ -149,3 +149,14 @@ h1.hero{font-size:34px;margin-top:22px}
 .chip.review{background:var(--warn-soft);color:var(--warn)}
 .chip.sent{background:var(--ok-soft);color:var(--ok)}
 .notice{background:var(--warn-soft);color:var(--warn);border-radius:12px;padding:10px 12px;font-size:13px;margin-top:12px}
+
+/* swipeable calendars */
+.cal{touch-action:pan-y;user-select:none;-webkit-user-select:none;overflow:hidden}
+.grid7.in-r{animation:calInR .24s ease-out}
+.grid7.in-l{animation:calInL .24s ease-out}
+.grid7.bump{animation:calBump .25s ease-out}
+@keyframes calInR{from{transform:translateX(40px);opacity:0}}
+@keyframes calInL{from{transform:translateX(-40px);opacity:0}}
+@keyframes calBump{30%{transform:translateX(-6px)}60%{transform:translateX(4px)}}
+@media (prefers-reduced-motion:reduce){.grid7.in-r,.grid7.in-l,.grid7.bump{animation:none}}
+.swipehint{font-size:11px;color:var(--muted);text-align:center;margin-top:8px}

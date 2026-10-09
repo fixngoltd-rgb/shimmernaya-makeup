@@ -96,3 +96,26 @@ function monthGrid(base,cellFn){
   return `<div class="grid7">${h}</div>`;
 }
 const monthName=base=>base.toLocaleDateString(locale(),{month:"long",year:"numeric"});
+
+/* ---------- swipe between months (finger on phone, drag with mouse on computer) ---------- */
+let SWIPE_DIR=0, SUPPRESS_CLICK_UNTIL=0;
+document.addEventListener("click",e=>{if(Date.now()<SUPPRESS_CLICK_UNTIL){e.stopPropagation();e.preventDefault()}},true);
+function attachSwipe(cal){
+  if(!cal) return;
+  const prev=cal.querySelector("#pm"), next=cal.querySelector("#nm");
+  // arrows also animate
+  cal.addEventListener("click",e=>{if(e.target.closest("#nm"))SWIPE_DIR=1;else if(e.target.closest("#pm"))SWIPE_DIR=-1},true);
+  let x0=null,y0=0,id=null;
+  cal.addEventListener("pointerdown",e=>{if(e.button>0)return;x0=e.clientX;y0=e.clientY;id=e.pointerId});
+  cal.addEventListener("pointerup",e=>{
+    if(x0==null||e.pointerId!==id) return;
+    const dx=e.clientX-x0, dy=e.clientY-y0; x0=null;
+    if(Math.abs(dx)<45||Math.abs(dx)<Math.abs(dy)*1.3) return;
+    const btn=dx<0?next:prev;
+    SUPPRESS_CLICK_UNTIL=Date.now()+350;
+    if(btn&&!btn.disabled){SWIPE_DIR=dx<0?1:-1;btn.onclick()}
+    else{const g=cal.querySelector(".grid7");if(g){g.classList.remove("bump");void g.offsetWidth;g.classList.add("bump")}}
+  });
+  cal.addEventListener("pointercancel",()=>{x0=null});
+  if(SWIPE_DIR){const g=cal.querySelector(".grid7");if(g)g.classList.add(SWIPE_DIR>0?"in-r":"in-l");SWIPE_DIR=0}
+}

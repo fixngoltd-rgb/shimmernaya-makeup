@@ -24,7 +24,7 @@
 <script src="shared.js"></script>
 <script>
 const T={
-id:{tagline:"Makeup Artist · Booking",step:"Langkah {a} dari {b}",next:"Lanjut",pay:"Bayar {x}",paying:"Memproses…",back:"Kembali",
+id:{tagline:"Makeup Artist · Booking",swipe:"‹ geser untuk ganti bulan ›",step:"Langkah {a} dari {b}",next:"Lanjut",pay:"Bayar {x}",paying:"Memproses…",back:"Kembali",
  homeT:"Halo Kak! Mau dirias untuk acara apa?",homeD:"Booking langsung di sini — pilih acara, tanggal, dan jam Kakak harus siap. Atau cek dulu tanggal yang masih kosong.",
  bookNow:"Booking sekarang",bookNowD:"± 2 menit, langsung dapat konfirmasi",checkAv:"Cek tanggal kosong dulu",checkAvD:"Lihat kalender tanpa harus booking",
  avT:"Kalender ketersediaan",avD:"Lihat tanggal yang masih bisa. Booking bisa nanti kapan saja.",avOpen:"Banyak jam kosong",avLim:"Tinggal sedikit",avFull:"Penuh",avPick:"Pilih tanggal untuk lihat detail.",
@@ -74,7 +74,7 @@ Sisa di hari H: {rem}
 ✅ Sudah masuk kalender`,
  invReady:"📄 Invoice {inv} siap dicek sebelum dikirim ke klien:",openInv:"Buka & cek invoice",
  foot:"Untuk Shimmernaya: <a href=\"admin.html\">buka halaman admin</a>"},
-en:{tagline:"Makeup Artist · Booking",step:"Step {a} of {b}",next:"Continue",pay:"Pay {x}",paying:"Processing…",back:"Back",
+en:{tagline:"Makeup Artist · Booking",swipe:"‹ swipe to change month ›",step:"Step {a} of {b}",next:"Continue",pay:"Pay {x}",paying:"Processing…",back:"Back",
  homeT:"Hi! What are you getting your makeup done for?",homeD:"Book right here — pick the occasion, the date and the time you need to be ready. Or check which dates are still free first.",
  bookNow:"Book now",bookNowD:"About 2 minutes, instant confirmation",checkAv:"Check free dates first",checkAvD:"See the calendar without booking",
  avT:"Availability calendar",avD:"See which dates are still open. You can book any time later.",avOpen:"Plenty of times",avLim:"Only a few left",avFull:"Full",avPick:"Pick a date to see details.",
@@ -176,9 +176,10 @@ function avail(){
       <button class="btn" id="bookThis" style="width:100%">${t("bookThis")}</button>`}</div>`;}
   view.innerHTML=`<h1>${t("avT")}</h1><p class="sub">${t("avD")}</p>
    <div class="cal"><div class="calhead"><button class="nav" id="pm" ${S.avMonth===0?"disabled":""} aria-label="prev">‹</button><b>${monthName(base)}</b><button class="nav" id="nm" ${S.avMonth>=11?"disabled":""} aria-label="next">›</button></div>${grid}
-   <div class="legend"><span><i class="dot ok"></i>${t("avOpen")}</span><span><i class="dot warn"></i>${t("avLim")}</span><span><i class="dot full"></i>${t("avFull")}</span></div></div>${panel}`;
+   <div class="swipehint">${t("swipe")}</div><div class="legend"><span><i class="dot ok"></i>${t("avOpen")}</span><span><i class="dot warn"></i>${t("avLim")}</span><span><i class="dot full"></i>${t("avFull")}</span></div></div>${panel}`;
   view.querySelector("#pm").onclick=()=>{S.avMonth--;render()};
   view.querySelector("#nm").onclick=()=>{S.avMonth++;render()};
+  attachSwipe(view.querySelector(".cal"));
   view.querySelectorAll(".day:not(:disabled)").forEach(b=>b.onclick=()=>{S.avSel=b.dataset.ds;S.scrollPanel=true;render()});
   const start=pref=>{S.mode="flow";S.date=S.avSel;S.month=S.avMonth;S.pref=pref;go(1)};
   const bt=view.querySelector("#bookThis"); if(bt) bt.onclick=()=>start(null);
@@ -198,9 +199,10 @@ function s2(){
   const grid=monthGrid(base,(ds,d)=>{const past=fromIso(ds)<=TODAY, open=dayOpenFor(ds,len,db);
     return `<button class="day" data-ds="${ds}" ${open?"":"disabled"} aria-pressed="${S.date===ds}">${d}${!open&&!past?`<span class="full">${t("full")}</span>`:""}</button>`});
   view.innerHTML=`<h1>${t("s2")}</h1><p class="sub">${t("s2d")}</p>
-   <div class="cal"><div class="calhead"><button class="nav" id="pm" ${S.month===0?"disabled":""} aria-label="prev">‹</button><b>${monthName(base)}</b><button class="nav" id="nm" ${S.month>=11?"disabled":""} aria-label="next">›</button></div>${grid}</div>`;
+   <div class="cal"><div class="calhead"><button class="nav" id="pm" ${S.month===0?"disabled":""} aria-label="prev">‹</button><b>${monthName(base)}</b><button class="nav" id="nm" ${S.month>=11?"disabled":""} aria-label="next">›</button></div>${grid}<div class="swipehint">${t("swipe")}</div></div>`;
   view.querySelector("#pm").onclick=()=>{S.month--;render()};
   view.querySelector("#nm").onclick=()=>{S.month++;render()};
+  attachSwipe(view.querySelector(".cal"));
   view.querySelectorAll(".day:not(:disabled)").forEach(b=>b.onclick=()=>{S.date=b.dataset.ds;S.time=null;go(3)});
   next.disabled=!S.date;
 }
