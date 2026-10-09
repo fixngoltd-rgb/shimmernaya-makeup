@@ -28,7 +28,7 @@ id:{tagline:"Makeup Artist · Booking",step:"Langkah {a} dari {b}",next:"Lanjut"
  homeT:"Halo Kak! Mau dirias untuk acara apa?",homeD:"Booking langsung di sini — pilih acara, tanggal, dan jam Kakak harus siap. Atau cek dulu tanggal yang masih kosong.",
  bookNow:"Booking sekarang",bookNowD:"± 2 menit, langsung dapat konfirmasi",checkAv:"Cek tanggal kosong dulu",checkAvD:"Lihat kalender tanpa harus booking",
  avT:"Kalender ketersediaan",avD:"Lihat tanggal yang masih bisa. Booking bisa nanti kapan saja.",avOpen:"Banyak jam kosong",avLim:"Tinggal sedikit",avFull:"Penuh",avPick:"Pilih tanggal untuk lihat detail.",
- avDayOpen:"Masih banyak jam kosong di tanggal ini.",avDayLim:"Tinggal {n} pilihan jam di tanggal ini — sebaiknya booking segera.",avDayFull:"Tanggal ini sudah penuh. Coba tanggal lain ya.",bookThis:"Booking tanggal ini",
+ avTimes:"Jam siap yang masih tersedia",avTimesD:"Untuk riasan ±1,5 jam. Paket pengantin butuh waktu lebih lama, jadi pilihannya bisa lebih sedikit. Tap jam untuk langsung booking.",avDayOpen:"Masih banyak jam kosong di tanggal ini.",avDayLim:"Tinggal {n} pilihan jam di tanggal ini — sebaiknya booking segera.",avDayFull:"Tanggal ini sudah penuh. Coba tanggal lain ya.",bookThis:"Booking tanggal ini",
  s1:"Mau makeup untuk acara apa, Kak?",s1d:"Pilih satu. Harga dan jadwal muncul di langkah berikutnya.",
  s2:"Tanggal acaranya kapan?",s2d:"Tanggal yang dicoret sudah penuh.",full:"PENUH",
  s3:"Pilih paket",s3d:"Harga per orang. Tambah orang di bawah kalau ada yang ikut dirias.",people:"Jumlah orang dirias",peopleD:"Termasuk Kakak",extra:"+{x} / orang tambahan",
@@ -78,7 +78,7 @@ en:{tagline:"Makeup Artist · Booking",step:"Step {a} of {b}",next:"Continue",pa
  homeT:"Hi! What are you getting your makeup done for?",homeD:"Book right here — pick the occasion, the date and the time you need to be ready. Or check which dates are still free first.",
  bookNow:"Book now",bookNowD:"About 2 minutes, instant confirmation",checkAv:"Check free dates first",checkAvD:"See the calendar without booking",
  avT:"Availability calendar",avD:"See which dates are still open. You can book any time later.",avOpen:"Plenty of times",avLim:"Only a few left",avFull:"Full",avPick:"Pick a date to see details.",
- avDayOpen:"Plenty of times still open on this date.",avDayLim:"Only {n} ready-by times left on this date — best to book soon.",avDayFull:"This date is fully booked. Try another date.",bookThis:"Book this date",
+ avTimes:"Ready-by times still free",avTimesD:"Based on a ±1.5 hr makeup. Bridal packages take longer, so there may be fewer options. Tap a time to book it.",avDayOpen:"Plenty of times still open on this date.",avDayLim:"Only {n} ready-by times left on this date — best to book soon.",avDayFull:"This date is fully booked. Try another date.",bookThis:"Book this date",
  s1:"What's the makeup for?",s1d:"Pick one. Prices and times show up in the next steps.",
  s2:"When is the event?",s2d:"Crossed-out dates are fully booked.",full:"FULL",
  s3:"Choose a package",s3d:"Price per person. Add people below if others are getting done too.",people:"Number of people",peopleD:"Including you",extra:"+{x} / extra person",
@@ -169,15 +169,21 @@ function avail(){
     return `<button class="day ${st==="full"?"st-full":""} ${ds===iso(TODAY)?"today":""}" data-ds="${ds}" ${past?"disabled":""} aria-pressed="${S.avSel===ds}">${d}${past?"":`<i class="dot ${st==="open"?"ok":st==="limited"?"warn":"full"}"></i>`}</button>`});
   let panel=`<p class="hint">${t("avPick")}</p>`;
   if(S.avSel){const st=dayStatus(S.avSel,db);const n=READY_SLOTS.filter(h=>readyFree(S.avSel,h,90,db)).length;
-    panel=`<div class="card" style="margin-top:14px"><div style="font-weight:700">${fmtDate(S.avSel)}</div><p class="hint" style="margin:6px 0 ${st==="full"?0:12}px">${st==="open"?t("avDayOpen"):st==="limited"?t("avDayLim",{n}):t("avDayFull")}</p>
-      ${st==="full"?"":`<button class="btn" id="bookThis" style="width:100%">${t("bookThis")}</button>`}</div>`;}
+    panel=`<div class="card" style="margin-top:14px" id="avpanel"><div style="font-weight:700">${fmtDate(S.avSel)}</div><p class="hint" style="margin:6px 0 ${st==="full"?0:12}px">${st==="open"?t("avDayOpen"):st==="limited"?t("avDayLim",{n}):t("avDayFull")}</p>
+      ${st==="full"?"":`<div class="label" style="margin-top:4px">${t("avTimes")}</div>
+      <div class="slots">${READY_SLOTS.map(h=>{const ok=readyFree(S.avSel,h,90,db);return `<button class="slot" data-h="${h}" ${ok?"":"disabled"}>${hm(h*60)}</button>`}).join("")}</div>
+      <p class="hint" style="margin:10px 0 14px">${t("avTimesD")}</p>
+      <button class="btn" id="bookThis" style="width:100%">${t("bookThis")}</button>`}</div>`;}
   view.innerHTML=`<h1>${t("avT")}</h1><p class="sub">${t("avD")}</p>
    <div class="cal"><div class="calhead"><button class="nav" id="pm" ${S.avMonth===0?"disabled":""} aria-label="prev">‹</button><b>${monthName(base)}</b><button class="nav" id="nm" ${S.avMonth>=11?"disabled":""} aria-label="next">›</button></div>${grid}
    <div class="legend"><span><i class="dot ok"></i>${t("avOpen")}</span><span><i class="dot warn"></i>${t("avLim")}</span><span><i class="dot full"></i>${t("avFull")}</span></div></div>${panel}`;
   view.querySelector("#pm").onclick=()=>{S.avMonth--;render()};
   view.querySelector("#nm").onclick=()=>{S.avMonth++;render()};
-  view.querySelectorAll(".day:not(:disabled)").forEach(b=>b.onclick=()=>{S.avSel=b.dataset.ds;render()});
-  const bt=view.querySelector("#bookThis"); if(bt) bt.onclick=()=>{S.mode="flow";S.date=S.avSel;S.month=S.avMonth;go(1)};
+  view.querySelectorAll(".day:not(:disabled)").forEach(b=>b.onclick=()=>{S.avSel=b.dataset.ds;S.scrollPanel=true;render()});
+  const start=pref=>{S.mode="flow";S.date=S.avSel;S.month=S.avMonth;S.pref=pref;go(1)};
+  const bt=view.querySelector("#bookThis"); if(bt) bt.onclick=()=>start(null);
+  view.querySelectorAll("#avpanel .slot:not(:disabled)").forEach(b=>b.onclick=()=>start(+b.dataset.h));
+  if(S.scrollPanel){S.scrollPanel=false;const pn=view.querySelector("#avpanel");if(pn&&pn.scrollIntoView)pn.scrollIntoView({behavior:"smooth",block:"start"})}
   next.textContent=t("bookNow"); next.onclickAvail=true;
 }
 
@@ -211,6 +217,7 @@ function s3(){
 }
 function s4(){
   const db=load(), len=totalMin(), any=READY_SLOTS.some(h=>readyFree(S.date,h,len,db));
+  if(S.time==null&&S.pref!=null&&readyFree(S.date,S.pref,len,db)) S.time=S.pref;
   view.innerHTML=`<h1>${t("s4")}</h1><p class="sub">${fmtDate(S.date)}<br>${t("s4d",{d:durTxt(len)})}</p>
    <div class="slots">${READY_SLOTS.map(h=>`<button class="slot" data-h="${h}" ${readyFree(S.date,h,len,db)?"":"disabled"} aria-pressed="${S.time===h}">${hm(h*60)}</button>`).join("")}</div>
    <p class="hint">${S.time!=null?"✓ "+t("until",{t:hm(S.time*60)}):t("s4h")}</p>`;

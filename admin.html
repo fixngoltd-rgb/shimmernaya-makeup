@@ -24,18 +24,31 @@
 .item .s{font-size:13px;color:var(--muted)}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 .actions .btn{flex:1 1 140px}
-.inv{background:#fff;color:#2A1A24;border-radius:6px;padding:22px 20px;box-shadow:0 2px 14px #0000001f;font-size:12.5px;line-height:1.45}
-.inv .h{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;border-bottom:2px solid #9C2F55;padding-bottom:12px}
-.inv .logo{font-family:var(--display);font-style:italic;font-size:22px;color:#9C2F55}
-.inv .meta{text-align:right;font-size:11.5px}
-.inv h3{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#7A6670;margin:14px 0 4px}
-.inv table{width:100%;border-collapse:collapse;margin-top:6px;font-variant-numeric:tabular-nums}
-.inv th{text-align:left;font-size:10.5px;color:#7A6670;border-bottom:1px solid #EADDE2;padding:6px 4px;text-transform:uppercase;letter-spacing:.06em}
-.inv td{padding:7px 4px;border-bottom:1px solid #F3EEF0;vertical-align:top}
-.inv .r{text-align:right;white-space:nowrap}
-.inv .tot td{border:0;padding:3px 4px}
-.inv .grand td{font-weight:700;font-size:14px;border-top:1.5px solid #2A1A24;padding-top:7px}
-.inv .due td{color:#9C2F55;font-weight:700}
+/* Invoice preview = A5 sheet, sized in container units so it scales exactly like the PDF (1mm ≈ 0.676cqw) */
+.invwrap{container-type:inline-size;max-width:440px;margin:0 auto}
+.inv{background:#fff;color:#2A1A24;aspect-ratio:148/210;min-height:max-content;box-shadow:0 2px 16px #0000002a;border-radius:4px;padding:9.5cqw 9.5cqw 6cqw;display:flex;flex-direction:column;font-size:2.35cqw;line-height:1.45;font-family:var(--body)}
+.inv .h{display:flex;justify-content:space-between;gap:4cqw;align-items:flex-start;border-bottom:.5cqw solid #9C2F55;padding-bottom:3cqw}
+.inv .logo{font-family:var(--display);font-style:italic;font-size:6.2cqw;line-height:1;color:#9C2F55}
+.inv .tag{color:#7A6670;font-size:2cqw;margin-top:1.5cqw}
+.inv .meta{text-align:right;font-size:2cqw;color:#7A6670}
+.inv .meta b{display:block;color:#2A1A24;font-size:3.6cqw;letter-spacing:.12em}
+.inv .info{display:grid;grid-template-columns:1fr 1fr;gap:4cqw;margin-top:4.5cqw}
+.inv .info>div{min-width:0;overflow-wrap:anywhere}
+.inv h3{font-size:1.75cqw;letter-spacing:.12em;text-transform:uppercase;color:#7A6670;margin:0 0 1cqw;font-weight:700}
+.inv .strong{font-weight:700}
+.inv .ihead{display:flex;justify-content:space-between;background:#F7E4EB;border-radius:1cqw;padding:1.6cqw 2cqw;margin-top:5cqw;font-size:1.75cqw;letter-spacing:.12em;text-transform:uppercase;color:#7A6670;font-weight:700}
+.inv .it{display:flex;justify-content:space-between;gap:4cqw;padding:2.2cqw 2cqw;border-bottom:.2cqw solid #EADDE2}
+.inv .it .ds{min-width:0;overflow-wrap:anywhere}
+.inv .it .qp{color:#7A6670;font-size:2cqw;font-variant-numeric:tabular-nums}
+.inv .it .am{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:600}
+.inv .tots{margin:3cqw 0 0 auto;width:62%;font-variant-numeric:tabular-nums}
+.inv .tots div{display:flex;justify-content:space-between;gap:3cqw;padding:.8cqw 2cqw}
+.inv .tots .grand{border-top:.35cqw solid #2A1A24;margin-top:1cqw;padding-top:1.8cqw;font-weight:700;font-size:2.9cqw}
+.inv .tots .due{background:#F7E4EB;border-radius:1cqw;color:#9C2F55;font-weight:700;margin-top:1cqw;padding:1.6cqw 2cqw}
+.inv .note{margin-top:4cqw;white-space:pre-wrap;overflow-wrap:anywhere}
+.inv .foot{margin-top:auto;padding-top:4cqw;border-top:.2cqw solid #EADDE2;display:flex;justify-content:space-between;gap:4cqw;font-size:2cqw}
+.inv .foot>div{min-width:0;overflow-wrap:anywhere}
+.inv .thanks{text-align:center;font-family:var(--display);font-style:italic;color:#9C2F55;font-size:2.8cqw;margin-top:3cqw}
 .ed{display:grid;grid-template-columns:1fr 54px 110px 32px;gap:6px;align-items:center;margin-bottom:6px}
 .ed input{width:100%;min-width:0;padding:9px 8px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);font:inherit;font-size:14px;color:var(--ink)}
 .ed button{border:0;background:none;color:var(--err);font-size:18px;cursor:pointer}
@@ -77,7 +90,7 @@ id:{tagline:"Admin · Kalender",cal:"Kalender",invTab:"Invoice",addB:"+ Booking 
  waText:"Halo Kak {name}! Ini invoice untuk booking {code} ({date}). Terima kasih 🤍 — Shimmernaya",
  demoNote:"Mode tes: data hanya tersimpan di HP/browser ini, dan halaman booking di browser yang sama langsung ikut berubah.",
  foot:"<a href=\"index.html\">Buka halaman booking klien</a>",
- p_inv:"INVOICE",p_issued:"Tanggal invoice",p_bill:"Ditagihkan kepada",p_event:"Detail acara",p_sub:"Subtotal",p_disc:"Diskon",p_total:"Total",p_dp:"DP dibayar",p_due:"Sisa dibayar di hari H",p_pay:"Pembayaran",p_thanks:"Terima kasih sudah memilih Shimmernaya!",p_desc:"Keterangan",p_qty:"Jml",p_price:"Harga",p_amt:"Jumlah"},
+ p_inv:"INVOICE",p_issued:"Tanggal invoice",p_bill:"Ditagihkan kepada",p_event:"Detail acara",p_sub:"Subtotal",p_disc:"Diskon",p_total:"Total",p_dp:"DP dibayar",p_due:"Sisa, bayar di hari H",p_pay:"Pembayaran",p_thanks:"Terima kasih sudah memilih Shimmernaya!",p_code:"Kode booking",p_desc:"Keterangan",p_qty:"Jml",p_price:"Harga",p_amt:"Jumlah"},
 en:{tagline:"Admin · Calendar",cal:"Calendar",invTab:"Invoices",addB:"+ Manual booking",addBlock:"Block time / day off",none:"Nothing booked on this date.",
  ex:"Example",online:"Online",manual:"Manual",block:"Block",review:"To review",sent:"Sent",allDay:"All day",
  ready:"ready",start:"start",detail:"Booking details",client:"Client",wa:"WhatsApp",svc:"Service",people:"People",date:"Date",readyBy:"Ready by",startAt:"Makeup starts",loc:"Location",note:"Notes",total:"Total",dp:"Deposit paid",remain:"Remaining",
@@ -94,7 +107,7 @@ en:{tagline:"Admin · Calendar",cal:"Calendar",invTab:"Invoices",addB:"+ Manual 
  waText:"Hi {name}! Here's the invoice for booking {code} ({date}). Thank you 🤍 — Shimmernaya",
  demoNote:"Test mode: data is only saved on this phone/browser, and the booking page in the same browser updates straight away.",
  foot:"<a href=\"index.html\">Open the client booking page</a>",
- p_inv:"INVOICE",p_issued:"Invoice date",p_bill:"Billed to",p_event:"Event details",p_sub:"Subtotal",p_disc:"Discount",p_total:"Total",p_dp:"Deposit paid",p_due:"Balance due on the day",p_pay:"Payment",p_thanks:"Thank you for choosing Shimmernaya!",p_desc:"Description",p_qty:"Qty",p_price:"Price",p_amt:"Amount"}};
+ p_inv:"INVOICE",p_issued:"Invoice date",p_bill:"Billed to",p_event:"Event details",p_sub:"Subtotal",p_disc:"Discount",p_total:"Total",p_dp:"Deposit paid",p_due:"Balance due on the day",p_pay:"Payment",p_thanks:"Thank you for choosing Shimmernaya!",p_code:"Booking code",p_desc:"Description",p_qty:"Qty",p_price:"Price",p_amt:"Amount"}};
 const t=(k,v={})=>T[LANG][k].replace(/\{(\w+)\}/g,(_,x)=>v[x]??"");
 
 let A={view:"cal",tab:"cal",month:0,sel:iso(TODAY),id:null,confirm:false,form:null,errs:{},inv:null};
@@ -295,58 +308,88 @@ function invoice(){
   };
 }
 function invHtml(b,d,x){
-  const issued=fmtDate(iso(new Date()));
-  return `<div class="inv">
-   <div class="h"><div><div class="logo">Shimmernaya</div><div>Makeup Artist</div><div>WA ${BIZ.wa}</div></div>
-    <div class="meta"><div style="font-weight:700;font-size:15px;letter-spacing:.08em">${t("p_inv")}</div><div>${invNo(b)}</div><div>${t("p_issued")}: ${issued}</div></div></div>
-   <div class="two" style="gap:14px"><div><h3>${t("p_bill")}</h3><div style="font-weight:700">${esc(b.name)}</div><div>${esc(b.wa||"")}</div></div>
-    <div><h3>${t("p_event")}</h3><div>${fmtDate(b.date)}</div><div>${t("readyBy")} ${b.ready!=null?hm(b.ready):hm(b.end)}</div><div>${esc(b.loc||"")}</div></div></div>
-   <table><thead><tr><th>${t("p_desc")}</th><th class="r">${t("p_qty")}</th><th class="r">${t("p_price")}</th><th class="r">${t("p_amt")}</th></tr></thead><tbody>
-    ${d.items.filter(i=>i.d||i.p).map(i=>`<tr><td>${esc(i.d)}</td><td class="r">${i.q}</td><td class="r">${rp(i.p)}</td><td class="r">${rp(i.q*i.p)}</td></tr>`).join("")}</tbody></table>
-   <table style="margin-top:8px"><tbody class="tot">
-    <tr><td></td><td class="r">${t("p_sub")}</td><td class="r" style="width:40%">${rp(x.sub)}</td></tr>
-    ${d.discount?`<tr><td></td><td class="r">${t("p_disc")}</td><td class="r">−${rp(d.discount)}</td></tr>`:""}
-    <tr class="grand"><td></td><td class="r">${t("p_total")}</td><td class="r">${rp(x.tot)}</td></tr>
-    <tr><td></td><td class="r">${t("p_dp")}</td><td class="r">−${rp(d.dp)}</td></tr>
-    <tr class="due"><td></td><td class="r">${t("p_due")}</td><td class="r">${rp(x.due)}</td></tr></tbody></table>
-   <h3>${t("p_pay")}</h3><div>${BIZ.bank}</div>
-   ${d.invNote?`<h3>${t("note")}</h3><div style="white-space:pre-wrap">${esc(d.invNote)}</div>`:""}
-   <p style="margin:16px 0 0;text-align:center;font-style:italic;color:#9C2F55">${t("p_thanks")}</p></div>`;
+  const items=d.items.filter(i=>i.d||i.p);
+  return `<div class="invwrap"><div class="inv">
+   <div class="h"><div><div class="logo">Shimmernaya</div><div class="tag">Makeup Artist · WA ${BIZ.wa}</div></div>
+    <div class="meta"><b>${t("p_inv")}</b>${invNo(b)}<br>${t("p_issued")}: ${fmtShortDate(new Date())}</div></div>
+   <div class="info"><div><h3>${t("p_bill")}</h3><div class="strong">${esc(b.name)}</div><div>${esc(b.wa||"")}</div></div>
+    <div><h3>${t("p_event")}</h3><div class="strong">${fmtShortDate(b.date)}</div><div>${t("readyBy")} ${hm(b.ready!=null?b.ready:b.end)}</div><div>${esc(b.loc||"")}</div></div></div>
+   <div class="ihead"><span>${t("p_desc")}</span><span>${t("p_amt")}</span></div>
+   ${items.map(i=>`<div class="it"><div class="ds"><div>${esc(i.d)}</div><div class="qp">${i.q} × ${rp(i.p)}</div></div><div class="am">${rp(i.q*i.p)}</div></div>`).join("")}
+   <div class="tots">
+    <div><span>${t("p_sub")}</span><span>${rp(x.sub)}</span></div>
+    ${d.discount?`<div><span>${t("p_disc")}</span><span>−${rp(d.discount)}</span></div>`:""}
+    <div class="grand"><span>${t("p_total")}</span><span>${rp(x.tot)}</span></div>
+    <div><span>${t("p_dp")}</span><span>−${rp(d.dp)}</span></div>
+    <div class="due"><span>${t("p_due")}</span><span>${rp(x.due)}</span></div></div>
+   ${d.invNote?`<div class="note"><h3>${t("note")}</h3>${esc(d.invNote)}</div>`:""}
+   <div class="foot"><div><h3>${t("p_pay")}</h3>${BIZ.bank}</div><div style="text-align:right"><h3>${t("p_code")}</h3>${b.code}</div></div>
+   <div class="thanks">${t("p_thanks")}</div></div></div>`;
 }
+const fmtShortDate=d=>(typeof d==="string"?fromIso(d):d).toLocaleDateString(locale(),{weekday:"short",day:"numeric",month:"long",year:"numeric"});
 
-/* ---------- PDF ---------- */
+/* ---------- PDF (A5, same layout as the preview) ---------- */
 function buildPdf(b){
-  const {jsPDF}=window.jspdf, doc=new jsPDF({unit:"mm",format:"a4"}), x=totals(b), W=210, L=18, R=W-18;
-  const berry=[156,47,85], ink=[42,26,36], muted=[122,102,112];
-  doc.setTextColor(...berry);doc.setFont("times","bolditalic");doc.setFontSize(26);doc.text("Shimmernaya",L,26);
-  doc.setFont("helvetica","normal");doc.setFontSize(10);doc.setTextColor(...muted);doc.text(["Makeup Artist","WhatsApp "+BIZ.wa],L,33);
-  doc.setTextColor(...ink);doc.setFont("helvetica","bold");doc.setFontSize(16);doc.text(t("p_inv"),R,24,{align:"right"});
-  doc.setFont("helvetica","normal");doc.setFontSize(10);doc.text([invNo(b),t("p_issued")+": "+fmtDate(iso(new Date()))],R,31,{align:"right"});
-  doc.setDrawColor(...berry);doc.setLineWidth(.8);doc.line(L,42,R,42);
-  let y=52;
-  const head=(s,xx,yy)=>{doc.setFont("helvetica","bold");doc.setFontSize(8.5);doc.setTextColor(...muted);doc.text(s.toUpperCase(),xx,yy)};
-  head(t("p_bill"),L,y);head(t("p_event"),110,y);
-  doc.setTextColor(...ink);doc.setFontSize(10.5);doc.setFont("helvetica","bold");doc.text(b.name||"",L,y+6);
-  doc.setFont("helvetica","normal");doc.text(b.wa||"",L,y+11.5);
-  const ev=[fmtDate(b.date),t("readyBy")+" "+(b.ready!=null?hm(b.ready):hm(b.end)),...doc.splitTextToSize(b.loc||"",R-110)];
-  doc.text(ev,110,y+6);
-  y+=14+ev.length*5;
-  doc.setFillColor(247,228,235);doc.rect(L,y,R-L,8,"F");
-  head(t("p_desc"),L+2,y+5.5);head(t("p_qty"),130,y+5.5);head(t("p_price"),158,y+5.5);
-  doc.text(t("p_amt").toUpperCase(),R-2,y+5.5,{align:"right"});
-  y+=14;doc.setTextColor(...ink);doc.setFontSize(10);doc.setFont("helvetica","normal");
-  (b.items||[]).forEach(i=>{const lines=doc.splitTextToSize(i.d||"",100);doc.text(lines,L+2,y);doc.text(String(i.q),134,y,{align:"right"});doc.text(rp(i.p),175,y,{align:"right"});doc.text(rp(i.q*i.p),R-2,y,{align:"right"});y+=lines.length*5+3;doc.setDrawColor(234,221,226);doc.setLineWidth(.2);doc.line(L,y-2.5,R,y-2.5)});
-  y+=4;
-  const tl=(k,v,opt={})=>{doc.setFont("helvetica",opt.bold?"bold":"normal");doc.setTextColor(...(opt.color||ink));doc.setFontSize(opt.size||10);doc.text(k,150,y,{align:"right"});doc.text(v,R-2,y,{align:"right"});y+=opt.gap||6};
+  const {jsPDF}=window.jspdf, doc=new jsPDF({unit:"mm",format:"a5"}), x=totals(b);
+  const W=148,H=210,L=14,R=134;
+  const berry=[156,47,85], ink=[42,26,36], muted=[122,102,112], soft=[247,228,235], line=[234,221,226];
+  const txt=(s,xx,yy,o={})=>{doc.setFont(o.font||"helvetica",o.style||"normal");doc.setFontSize(o.size||9);doc.setTextColor(...(o.color||ink));doc.text(s,xx,yy,o.align?{align:o.align}:undefined)};
+  const head=(s,xx,yy,align)=>{const u=s.toUpperCase(),cs=.4;doc.setFont("helvetica","bold");doc.setFontSize(6.5);const w=doc.getTextWidth(u)+cs*(u.length-1);doc.setCharSpace(cs);txt(u,align==="right"?xx-w:xx,yy,{style:"bold",size:6.5,color:muted});doc.setCharSpace(0)};
+  const wrap=(s,w,size)=>{doc.setFont("helvetica","normal");doc.setFontSize(size);return doc.splitTextToSize(String(s||""),w)};
+
+  // header
+  txt("Shimmernaya",L,22,{font:"times",style:"bolditalic",size:22,color:berry});
+  txt("Makeup Artist · WA "+BIZ.wa,L,28,{size:7.5,color:muted});
+  doc.setFont("helvetica","bold");doc.setFontSize(12);{const u=t("p_inv"),w=doc.getTextWidth(u)+1*(u.length-1);doc.setCharSpace(1);txt(u,R-w,19,{style:"bold",size:12});doc.setCharSpace(0)}
+  txt(invNo(b),R,24.5,{size:7.5,color:muted,align:"right"});
+  txt(t("p_issued")+": "+fmtShortDate(new Date()),R,28.5,{size:7.5,color:muted,align:"right"});
+  doc.setDrawColor(...berry);doc.setLineWidth(.7);doc.line(L,33,R,33);
+
+  // client + event
+  let y=41; const colW=56, X2=78;
+  head(t("p_bill"),L,y);head(t("p_event"),X2,y);
+  const left=[...wrap(b.name,colW,9),...wrap(b.wa,colW,8.5)];
+  const right=[...wrap(fmtShortDate(b.date),colW,9),...wrap(t("readyBy")+" "+hm(b.ready!=null?b.ready:b.end),colW,8.5),...wrap(b.loc,colW,8.5)];
+  const nameLines=wrap(b.name,colW,9).length, dateLines=wrap(fmtShortDate(b.date),colW,9).length;
+  left.forEach((l,i)=>txt(l,L,y+5+i*4,{style:i<nameLines?"bold":"normal",size:i<nameLines?9:8.5}));
+  right.forEach((l,i)=>txt(l,X2,y+5+i*4,{style:i<dateLines?"bold":"normal",size:i<dateLines?9:8.5}));
+  y+=5+Math.max(left.length,right.length)*4+5;
+
+  // items
+  doc.setFillColor(...soft);doc.roundedRect(L,y,R-L,7,1,1,"F");
+  head(t("p_desc"),L+3,y+4.6);head(t("p_amt"),R-3,y+4.6,"right");
+  y+=7;
+  (b.items||[]).filter(i=>i.d||i.p).forEach(i=>{
+    const ls=wrap(i.d,82,9); y+=5;
+    ls.forEach((l,k)=>txt(l,L+3,y+k*4,{size:9}));
+    txt(rp(i.q*i.p),R-3,y,{style:"bold",size:9,align:"right"});
+    y+=ls.length*4;
+    txt(i.q+" × "+rp(i.p),L+3,y,{size:7.5,color:muted});
+    y+=3;doc.setDrawColor(...line);doc.setLineWidth(.2);doc.line(L,y,R,y);
+  });
+
+  // totals (right block)
+  y+=7; const TL=72;
+  const tl=(k,v,o={})=>{txt(k,TL+(o.pad||0),y,{style:o.bold?"bold":"normal",size:o.size||8.5,color:o.color});txt(v,R-3,y,{style:o.bold?"bold":"normal",size:o.size||8.5,color:o.color,align:"right"});y+=o.gap||5};
   tl(t("p_sub"),rp(x.sub));
   if(b.discount) tl(t("p_disc"),"-"+rp(b.discount));
-  doc.setDrawColor(...ink);doc.setLineWidth(.4);doc.line(110,y-3.5,R,y-3.5);
-  tl(t("p_total"),rp(x.tot),{bold:true,size:12,gap:7});
-  tl(t("p_dp"),"-"+rp(b.dp));
-  tl(t("p_due"),rp(x.due),{bold:true,color:berry,size:11.5,gap:12});
-  head(t("p_pay"),L,y);doc.setTextColor(...ink);doc.setFont("helvetica","normal");doc.setFontSize(10);doc.text(BIZ.bank,L,y+6);y+=14;
-  if(b.invNote){head(t("note"),L,y);doc.setTextColor(...ink);doc.setFont("helvetica","normal");doc.setFontSize(10);const nl=doc.splitTextToSize(b.invNote,R-L);doc.text(nl,L,y+6);y+=8+nl.length*5}
-  doc.setFont("times","italic");doc.setFontSize(12);doc.setTextColor(...berry);doc.text(t("p_thanks"),W/2,282,{align:"center"});
+  doc.setDrawColor(...ink);doc.setLineWidth(.35);doc.line(TL,y-2.2,R,y-2.2);y+=2;
+  tl(t("p_total"),rp(x.tot),{bold:true,size:10.5,gap:5.5});
+  tl(t("p_dp"),"-"+rp(b.dp),{gap:3});
+  doc.setFillColor(...soft);doc.roundedRect(TL-2,y-1,R-TL+2,8,1,1,"F");y+=4.4;
+  tl(t("p_due"),rp(x.due),{bold:true,color:berry,size:9,pad:1,gap:8});
+
+  // note
+  if(b.invNote){y+=2;head(t("note"),L,y);const nl=wrap(b.invNote,R-L,8.5);nl.forEach((l,i)=>txt(l,L,y+5+i*4,{size:8.5}));y+=5+nl.length*4}
+
+  // footer pinned to the bottom of the page
+  let fy=Math.max(y+8,H-32);
+  if(fy+24>H){doc.addPage();fy=H-32}
+  doc.setDrawColor(...line);doc.setLineWidth(.2);doc.line(L,fy,R,fy);
+  head(t("p_pay"),L,fy+6);head(t("p_code"),R,fy+6,"right");
+  wrap(BIZ.bank,80,8.5).forEach((l,i)=>txt(l,L,fy+11+i*4,{size:8.5}));
+  txt(b.code,R,fy+11,{size:8.5,align:"right"});
+  txt(t("p_thanks"),W/2,H-9,{font:"times",style:"italic",size:10.5,color:berry,align:"center"});
   return doc;
 }
 const pdfBlob=b=>buildPdf(b).output("blob");
