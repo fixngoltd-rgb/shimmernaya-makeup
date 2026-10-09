@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shimmernaya Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;1,6..96,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="shared.css">
+<style>
+.tabs{display:flex;gap:6px;margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px}
+.tabs button{flex:1;border:0;background:none;border-radius:10px;padding:10px;font-weight:600;cursor:pointer;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--accent-soft);color:var(--accent)}
+.badge{display:inline-grid;place-items:center;min-width:20px;height:20px;border-radius:10px;background:var(--warn);color:var(--surface);font-size:11px;padding:0 6px;margin-left:4px}
+.day .cnt{display:flex;gap:2px}
+.day .cnt i{width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.day .cnt i.b{background:var(--muted)}
+.list{display:grid;gap:8px;margin-top:10px}
+.item{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;cursor:pointer}
+.item .tm{font-weight:700;font-variant-numeric:tabular-nums;min-width:92px;font-size:14px}
+.item .grow{flex:1;min-width:0}
+.item .n{font-weight:600}
+.item .s{font-size:13px;color:var(--muted)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.actions .btn{flex:1 1 140px}
+.inv{background:#fff;color:#2A1A24;border-radius:6px;padding:22px 20px;box-shadow:0 2px 14px #0000001f;font-size:12.5px;line-height:1.45}
+.inv .h{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;border-bottom:2px solid #9C2F55;padding-bottom:12px}
+.inv .logo{font-family:var(--display);font-style:italic;font-size:22px;color:#9C2F55}
+.inv .meta{text-align:right;font-size:11.5px}
+.inv h3{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#7A6670;margin:14px 0 4px}
+.inv table{width:100%;border-collapse:collapse;margin-top:6px;font-variant-numeric:tabular-nums}
+.inv th{text-align:left;font-size:10.5px;color:#7A6670;border-bottom:1px solid #EADDE2;padding:6px 4px;text-transform:uppercase;letter-spacing:.06em}
+.inv td{padding:7px 4px;border-bottom:1px solid #F3EEF0;vertical-align:top}
+.inv .r{text-align:right;white-space:nowrap}
+.inv .tot td{border:0;padding:3px 4px}
+.inv .grand td{font-weight:700;font-size:14px;border-top:1.5px solid #2A1A24;padding-top:7px}
+.inv .due td{color:#9C2F55;font-weight:700}
+.ed{display:grid;grid-template-columns:1fr 54px 110px 32px;gap:6px;align-items:center;margin-bottom:6px}
+.ed input{width:100%;min-width:0;padding:9px 8px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);font:inherit;font-size:14px;color:var(--ink)}
+.ed button{border:0;background:none;color:var(--err);font-size:18px;cursor:pointer}
+.check{display:flex;gap:10px;align-items:center;font-weight:600;margin-bottom:14px}
+.check input{width:20px;height:20px;accent-color:var(--accent)}
+.confirm{background:var(--warn-soft);border-radius:14px;padding:14px;margin-top:12px}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:600;font-size:14px;z-index:9}
+.backlink{background:none;border:0;color:var(--muted);font-weight:600;cursor:pointer;padding:8px 0;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap" style="padding-bottom:60px">
+  <div class="top">
+    <a class="brand" href="admin.html">Shimmernaya<small id="tagline">Admin</small></a>
+    <div id="langslot"></div>
+  </div>
+  <main id="view"></main>
+  <p class="foot" id="foot"></p>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="shared.js"></script>
+<script>
+const T={
+id:{tagline:"Admin · Kalender",cal:"Kalender",invTab:"Invoice",addB:"+ Booking manual",addBlock:"Blok waktu / libur",none:"Belum ada jadwal di tanggal ini.",
+ ex:"Contoh",online:"Online",manual:"Manual",block:"Blok",review:"Perlu dicek",sent:"Terkirim",allDay:"Seharian",
+ ready:"siap",start:"mulai",detail:"Detail booking",client:"Klien",wa:"WhatsApp",svc:"Layanan",people:"Orang",date:"Tanggal",readyBy:"Siap jam",startAt:"Mulai makeup",loc:"Lokasi",note:"Catatan",total:"Total",dp:"DP dibayar",remain:"Sisa",
+ openInv:"📄 Cek invoice",edit:"Ubah",del:"Hapus",delQ:"Hapus jadwal ini? Slotnya akan terbuka lagi di halaman booking.",yesDel:"Ya, hapus",cancel:"Batal",back:"← Kembali",
+ exNote:"Ini contoh jadwal (pengganti kalender asli). Tidak bisa diubah.",
+ formB:"Booking manual",formBD:"Untuk booking dari Instagram, telepon, atau langsung. Slot ini langsung tertutup di halaman booking.",formE:"Ubah booking",
+ fName:"Nama klien",fWa:"Nomor WhatsApp",fSvc:"Layanan",other:"Lainnya",fLabel:"Keterangan (muncul di invoice)",fPeople:"Jumlah orang",fDate:"Tanggal",fReady:"Klien siap jam",fStart:"Mulai makeup jam",fStartH:"Otomatis dihitung dari paket; ubah kalau perlu (perjalanan dll).",fLoc:"Lokasi",fTotal:"Harga total (Rp)",fDp:"DP sudah dibayar (Rp)",fNote:"Catatan",save:"Simpan",
+ formBl:"Blok waktu",formBlD:"Untuk libur, acara pribadi, atau jadwal yang tidak lewat sistem. Waktu ini ditutup di halaman booking.",fAll:"Blok seharian",fFrom:"Dari jam",fTo:"Sampai jam",fReason:"Alasan (hanya terlihat oleh kamu)",reasonPh:"Misal: libur, acara keluarga",
+ errReq:"Lengkapi yang bertanda ini",errTime:"Jam mulai harus sebelum jam siap",errClash:"Bentrok dengan jadwal lain di jam itu",
+ invList:"Invoice",invListD:"Booking baru masuk sebagai \"Perlu dicek\". Cek dulu, ubah kalau perlu, lalu kirim ke klien.",noInv:"Belum ada invoice. Coba buat booking di halaman booking atau tambah booking manual.",
+ invT:"Invoice {n}",items:"Rincian",addItem:"+ Tambah baris",desc:"Keterangan",qty:"Jml",price:"Harga",discount:"Diskon (Rp)",invNote:"Catatan di invoice",
+ preview:"Preview",pdf:"Unduh PDF",sendWa:"Kirim ke WhatsApp klien",markSent:"Tandai sudah terkirim",saved:"Tersimpan",sentOk:"Ditandai terkirim",
+ shareHelp:"Di HP: pilih WhatsApp lalu chat klien. Kalau tidak muncul, PDF diunduh dan WhatsApp klien dibuka — tinggal lampirkan PDF-nya.",
+ waText:"Halo Kak {name}! Ini invoice untuk booking {code} ({date}). Terima kasih 🤍 — Shimmernaya",
+ demoNote:"Mode tes: data hanya tersimpan di HP/browser ini, dan halaman booking di browser yang sama langsung ikut berubah.",
+ foot:"<a href=\"index.html\">Buka halaman booking klien</a>",
+ p_inv:"INVOICE",p_issued:"Tanggal invoice",p_bill:"Ditagihkan kepada",p_event:"Detail acara",p_sub:"Subtotal",p_disc:"Diskon",p_total:"Total",p_dp:"DP dibayar",p_due:"Sisa dibayar di hari H",p_pay:"Pembayaran",p_thanks:"Terima kasih sudah memilih Shimmernaya!",p_desc:"Keterangan",p_qty:"Jml",p_price:"Harga",p_amt:"Jumlah"},
+en:{tagline:"Admin · Calendar",cal:"Calendar",invTab:"Invoices",addB:"+ Manual booking",addBlock:"Block time / day off",none:"Nothing booked on this date.",
+ ex:"Example",online:"Online",manual:"Manual",block:"Block",review:"To review",sent:"Sent",allDay:"All day",
+ ready:"ready",start:"start",detail:"Booking details",client:"Client",wa:"WhatsApp",svc:"Service",people:"People",date:"Date",readyBy:"Ready by",startAt:"Makeup starts",loc:"Location",note:"Notes",total:"Total",dp:"Deposit paid",remain:"Remaining",
+ openInv:"📄 Review invoice",edit:"Edit",del:"Delete",delQ:"Delete this entry? The slot opens up again on the booking page.",yesDel:"Yes, delete",cancel:"Cancel",back:"← Back",
+ exNote:"This is an example entry (stand-in for her real calendar). It can't be changed.",
+ formB:"Manual booking",formBD:"For bookings from Instagram, phone calls or in person. The slot closes on the booking page straight away.",formE:"Edit booking",
+ fName:"Client name",fWa:"WhatsApp number",fSvc:"Service",other:"Other",fLabel:"Description (shown on the invoice)",fPeople:"Number of people",fDate:"Date",fReady:"Client ready by",fStart:"Makeup starts at",fStartH:"Worked out from the package; change it if needed (travel etc).",fLoc:"Location",fTotal:"Total price (Rp)",fDp:"Deposit already paid (Rp)",fNote:"Notes",save:"Save",
+ formBl:"Block time",formBlD:"For days off, personal plans or jobs outside the system. This time is closed on the booking page.",fAll:"Block the whole day",fFrom:"From",fTo:"To",fReason:"Reason (only you see this)",reasonPh:"E.g. day off, family event",
+ errReq:"Please fill in the marked fields",errTime:"Start time must be before the ready time",errClash:"Clashes with another entry at that time",
+ invList:"Invoices",invListD:"New bookings come in as \"To review\". Check them, edit if needed, then send to the client.",noInv:"No invoices yet. Make a booking on the booking page or add a manual booking.",
+ invT:"Invoice {n}",items:"Line items",addItem:"+ Add line",desc:"Description",qty:"Qty",price:"Price",discount:"Discount (Rp)",invNote:"Note on invoice",
+ preview:"Preview",pdf:"Download PDF",sendWa:"Send to client's WhatsApp",markSent:"Mark as sent",saved:"Saved",sentOk:"Marked as sent",
+ shareHelp:"On a phone: choose WhatsApp, then the client's chat. If that doesn't appear, the PDF downloads and the client's WhatsApp opens — just attach the PDF.",
+ waText:"Hi {name}! Here's the invoice for booking {code} ({date}). Thank you 🤍 — Shimmernaya",
+ demoNote:"Test mode: data is only saved on this phone/browser, and the booking page in the same browser updates straight away.",
+ foot:"<a href=\"index.html\">Open the client booking page</a>",
+ p_inv:"INVOICE",p_issued:"Invoice date",p_bill:"Billed to",p_event:"Event details",p_sub:"Subtotal",p_disc:"Discount",p_total:"Total",p_dp:"Deposit paid",p_due:"Balance due on the day",p_pay:"Payment",p_thanks:"Thank you for choosing Shimmernaya!",p_desc:"Description",p_qty:"Qty",p_price:"Price",p_amt:"Amount"}};
+const t=(k,v={})=>T[LANG][k].replace(/\{(\w+)\}/g,(_,x)=>v[x]??"");
+
+let A={view:"cal",tab:"cal",month:0,sel:iso(TODAY),id:null,confirm:false,form:null,errs:{},inv:null};
+const view=document.getElementById("view");
+document.getElementById("langslot").append(langToggle(render));
+const toast=m=>{const el=document.getElementById("toast");el.textContent=m;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,1800)};
+const toMin=s=>{if(!s)return null;const [h,m]=s.split(":").map(Number);return h*60+m};
+const toHHMM=m=>m==null?"":pad(Math.floor(m/60))+":"+pad(m%60);
+const totals=b=>{const sub=(b.items||[]).reduce((a,i)=>a+(+i.q||0)*(+i.p||0),0);const tot=Math.max(0,sub-(+b.discount||0));return{sub,tot,due:tot-(+b.dp||0)}};
+const findB=id=>load().bookings.find(b=>b.id===id||b.code===id);
+const labelOf=b=>b.src==="block"?(b.reason||t("block")):(b.label?.[LANG]||b.label?.id||"");
+const go=(v,extra={})=>{Object.assign(A,{view:v,confirm:false,errs:{}},extra);render();scrollTo(0,0)};
+
+function render(){
+  document.getElementById("tagline").textContent=t("tagline");
+  document.getElementById("foot").innerHTML=t("foot");
+  ({cal,detail,form,blockForm,invList,invoice})[A.view]();
+}
+function tabs(){
+  const n=load().bookings.filter(b=>b.src!=="block"&&b.inv==="review").length;
+  return `<div class="tabs" role="tablist"><button role="tab" data-t="cal" aria-selected="${A.tab==="cal"}">${t("cal")}</button><button role="tab" data-t="invList" aria-selected="${A.tab==="inv"}">${t("invTab")}${n?`<span class="badge">${n}</span>`:""}</button></div>`;
+}
+function bindTabs(){view.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>b.dataset.t==="cal"?go("cal",{tab:"cal"}):go("invList",{tab:"inv"}))}
+function chipFor(b){
+  if(b.src==="example") return `<span class="chip example">${t("ex")}</span>`;
+  if(b.src==="block") return `<span class="chip block">${t("block")}</span>`;
+  return `<span class="chip ${b.src}">${t(b.src)}</span> <span class="chip ${b.inv}">${t(b.inv)}</span>`;
+}
+function timeTxt(b){
+  if(b.src==="block") return (b.start<=0&&b.end>=1440)?t("allDay"):hm(b.start)+"–"+hm(b.end);
+  return hm(b.start)+"–"+hm(b.end);
+}
+
+/* ---------- calendar ---------- */
+function cal(){
+  const db=load(), base=new Date(TODAY.getFullYear(),TODAY.getMonth()+A.month,1);
+  const grid=monthGrid(base,(ds,d)=>{const es=entriesFor(ds,db);
+    return `<button class="day ${ds===iso(TODAY)?"today":""}" data-ds="${ds}" aria-pressed="${A.sel===ds}">${d}<span class="cnt">${es.slice(0,3).map(e=>`<i class="${e.src==="block"?"b":""}"></i>`).join("")}</span></button>`});
+  const es=entriesFor(A.sel,db);
+  view.innerHTML=`${tabs()}<p class="notice">${t("demoNote")}</p>
+   <div class="cal" style="margin-top:14px"><div class="calhead"><button class="nav" id="pm" ${A.month<=-6?"disabled":""} aria-label="prev">‹</button><b>${monthName(base)}</b><button class="nav" id="nm" ${A.month>=11?"disabled":""} aria-label="next">›</button></div>${grid}</div>
+   <div class="label">${fmtDate(A.sel)}</div>
+   <div class="list">${es.length?es.map(b=>`<button class="item" data-id="${b.id}"><span class="tm">${timeTxt(b)}</span><span class="grow"><div class="n">${esc(b.src==="block"?labelOf(b):b.name)}</div><div class="s">${esc(b.src==="block"?"":labelOf(b)+" · "+b.people+" "+(LANG==="id"?"orang":"ppl"))}</div><div style="margin-top:4px">${chipFor(b)}</div></span></button>`).join(""):`<p class="hint" style="margin:0">${t("none")}</p>`}</div>
+   <div class="actions"><button class="btn" id="addB">${t("addB")}</button><button class="btn ghost" id="addBl">${t("addBlock")}</button></div>`;
+  bindTabs();
+  view.querySelector("#pm").onclick=()=>{A.month--;render()};
+  view.querySelector("#nm").onclick=()=>{A.month++;render()};
+  view.querySelectorAll(".day").forEach(b=>b.onclick=()=>{A.sel=b.dataset.ds;render()});
+  view.querySelectorAll(".item").forEach(b=>b.onclick=()=>go("detail",{id:b.dataset.id}));
+  view.querySelector("#addB").onclick=()=>go("form",{form:newForm()});
+  view.querySelector("#addBl").onclick=()=>go("blockForm",{form:{date:A.sel,all:true,from:"09:00",to:"17:00",reason:""}});
+}
+
+/* ---------- detail ---------- */
+function detail(){
+  const db=load(); let b=db.bookings.find(x=>x.id===A.id)||entriesFor(A.sel,db).find(x=>x.id===A.id);
+  if(!b) return go("cal");
+  const rows=b.src==="block"?[[t("date"),fmtDate(b.date)],[LANG==="id"?"Waktu":"Time",timeTxt(b)]]:[
+    [t("client"),b.name],[t("wa"),b.wa||"–"],[t("svc"),labelOf(b)],[t("people"),b.people],[t("date"),fmtDate(b.date)],
+    [t("readyBy"),b.ready!=null?hm(b.ready):"–"],[t("startAt"),hm(b.start)],[t("loc"),b.loc||"–"],[t("note"),b.note||"–"]];
+  let money="";
+  if(b.items){const x=totals(b);money=`<div class="row total"><span>${t("total")}</span><span>${rp(x.tot)}</span></div><div class="row"><span>${t("dp")}</span><span>${rp(b.dp)}</span></div><div class="row"><span>${t("remain")}</span><span>${rp(x.due)}</span></div>`}
+  view.innerHTML=`<button class="backlink" id="bk">${t("back")}</button>
+   <h1>${esc(b.src==="block"?labelOf(b):b.name)}</h1><div>${chipFor(b)}</div>
+   <div class="card" style="margin-top:14px">${rows.map(([k,v])=>`<div class="row"><span>${k}</span><span>${esc(v)}</span></div>`).join("")}${money}</div>
+   ${b.src==="example"?`<p class="hint">${t("exNote")}</p>`:`
+   <div class="actions">${b.src!=="block"?`<button class="btn" id="inv">${t("openInv")}</button>`:""}<button class="btn ghost" id="ed">${t("edit")}</button><button class="btn danger" id="dl">${t("del")}</button></div>
+   ${A.confirm?`<div class="confirm"><p style="margin:0 0 10px">${t("delQ")}</p><div class="actions" style="margin:0"><button class="btn danger" id="yes">${t("yesDel")}</button><button class="btn ghost" id="no">${t("cancel")}</button></div></div>`:""}`}`;
+  view.querySelector("#bk").onclick=()=>go("cal",{sel:b.date});
+  if(b.src==="example") return;
+  const q=s=>view.querySelector(s);
+  if(q("#inv")) q("#inv").onclick=()=>go("invoice",{id:b.id,inv:null});
+  q("#ed").onclick=()=>b.src==="block"?go("blockForm",{form:{id:b.id,date:b.date,all:b.start<=0&&b.end>=1440,from:toHHMM(b.start>0?b.start:540),to:toHHMM(b.end<1440?b.end:1020),reason:b.reason||""}}):go("form",{form:editForm(b)});
+  q("#dl").onclick=()=>{A.confirm=true;render()};
+  if(q("#yes")){q("#yes").onclick=()=>{const d=load();d.bookings=d.bookings.filter(x=>x.id!==b.id);save(d);go("cal",{sel:b.date})};q("#no").onclick=()=>{A.confirm=false;render()}}
+}
+
+/* ---------- manual booking form ---------- */
+function newForm(){const s=SERVICES[0],p=s.pk[0];return{date:A.sel,name:"",wa:"",svc:s.id,pkg:p.id,label:`${s.n.id} – ${p.n.id}`,people:1,ready:"10:00",start:toHHMM(600-p.m),startTouched:false,loc:"",total:p.p,dp:0,note:""}}
+function editForm(b){const x=totals(b);return{id:b.id,date:b.date,name:b.name,wa:b.wa,svc:b.svc||"other",pkg:"",label:labelOf(b),people:b.people,ready:toHHMM(b.ready??b.end),start:toHHMM(b.start),startTouched:true,loc:b.loc,total:x.sub,dp:b.dp,note:b.note}}
+function pkgOptions(f){const s=svcById(f.svc);if(!s)return"";return `<div class="field"><label for="f-pkg">${LANG==="id"?"Paket":"Package"}</label><select id="f-pkg"><option value="">–</option>${s.pk.map(p=>`<option value="${p.id}" ${f.pkg===p.id?"selected":""}>${esc(p.n[LANG])} · ${rp(p.p)}</option>`).join("")}</select></div>`}
+function recalc(f){
+  const s=svcById(f.svc),p=s?.pk.find(x=>x.id===f.pkg);
+  if(p){f.label=`${s.n.id} – ${p.n.id}`;f.total=p.p+s.extra*(f.people-1);if(!f.startTouched)f.start=toHHMM(Math.max(EARLIEST,toMin(f.ready)-(p.m+EXTRA_MIN*(f.people-1))))}
+}
+function form(){
+  const f=A.form,e=A.errs,req=k=>e[k]?` <span class="err">●</span>`:"";
+  view.innerHTML=`<button class="backlink" id="bk">${t("back")}</button><h1>${f.id?t("formE"):t("formB")}</h1><p class="sub">${t("formBD")}</p>
+   <div class="field"><label for="f-name">${t("fName")}${req("name")}</label><input id="f-name" value="${esc(f.name)}"></div>
+   <div class="field"><label for="f-wa">${t("fWa")}</label><input id="f-wa" inputmode="tel" placeholder="08xx xxxx xxxx" value="${esc(f.wa)}"></div>
+   <div class="two"><div class="field"><label for="f-svc">${t("fSvc")}</label><select id="f-svc">${SERVICES.map(s=>`<option value="${s.id}" ${f.svc===s.id?"selected":""}>${s.n[LANG]}</option>`).join("")}<option value="other" ${f.svc==="other"?"selected":""}>${t("other")}</option></select></div>${pkgOptions(f)||"<div></div>"}</div>
+   <div class="field"><label for="f-label">${t("fLabel")}${req("label")}</label><input id="f-label" value="${esc(f.label)}"></div>
+   <div class="two"><div class="field"><label for="f-date">${t("fDate")}${req("date")}</label><input id="f-date" type="date" value="${f.date}"></div><div class="field"><label for="f-people">${t("fPeople")}</label><input id="f-people" type="number" min="1" max="20" value="${f.people}"></div></div>
+   <div class="two"><div class="field"><label for="f-ready">${t("fReady")}${req("ready")}</label><input id="f-ready" type="time" value="${f.ready}"></div><div class="field"><label for="f-start">${t("fStart")}${req("start")}</label><input id="f-start" type="time" value="${f.start}"></div></div>
+   <p class="hint" style="margin:-6px 0 14px">${t("fStartH")}</p>
+   <div class="field"><label for="f-loc">${t("fLoc")}</label><input id="f-loc" value="${esc(f.loc)}"></div>
+   <div class="two"><div class="field"><label for="f-total">${t("fTotal")}</label><input id="f-total" type="number" min="0" step="1000" value="${f.total}"></div><div class="field"><label for="f-dp">${t("fDp")}</label><input id="f-dp" type="number" min="0" step="1000" value="${f.dp}"></div></div>
+   <div class="field"><label for="f-note">${t("fNote")}</label><textarea id="f-note">${esc(f.note)}</textarea></div>
+   ${e.msg?`<p class="err" style="font-size:14px">${e.msg}</p>`:""}
+   <div class="actions"><button class="btn" id="sv">${t("save")}</button><button class="btn ghost" id="cn">${t("cancel")}</button></div>`;
+  const q=s=>view.querySelector(s);
+  const read=()=>{f.name=q("#f-name").value;f.wa=q("#f-wa").value;f.label=q("#f-label").value;f.date=q("#f-date").value;f.people=Math.max(1,+q("#f-people").value||1);f.ready=q("#f-ready").value;f.start=q("#f-start").value;f.loc=q("#f-loc").value;f.total=+q("#f-total").value||0;f.dp=+q("#f-dp").value||0;f.note=q("#f-note").value};
+  q("#f-svc").onchange=()=>{read();f.svc=q("#f-svc").value;f.pkg="";render()};
+  if(q("#f-pkg")) q("#f-pkg").onchange=()=>{read();f.pkg=q("#f-pkg").value;recalc(f);render()};
+  q("#f-people").onchange=()=>{read();recalc(f);render()};
+  q("#f-ready").onchange=()=>{read();recalc(f);render()};
+  q("#f-start").oninput=()=>{f.startTouched=true};
+  q("#bk").onclick=q("#cn").onclick=()=>f.id?go("detail",{id:f.id}):go("cal");
+  q("#sv").onclick=()=>{
+    read(); const s=toMin(f.start),r=toMin(f.ready);
+    A.errs={name:!f.name.trim(),label:!f.label.trim(),date:!f.date,ready:r==null,start:s==null};
+    if(Object.values(A.errs).some(Boolean)){A.errs.msg=t("errReq");return render()}
+    if(s>=r){A.errs={start:true,msg:t("errTime")};return render()}
+    const db=load();
+    const clash=entriesFor(f.date,db).some(x=>x.id!==f.id&&s<x.end&&r>x.start);
+    if(clash){A.errs={start:true,ready:true,msg:t("errClash")};return render()}
+    let b=f.id?db.bookings.find(x=>x.id===f.id):null;
+    if(!b){b={id:"m"+Date.now(),code:newCode(db),src:"manual",inv:"review",items:[],discount:0,created:new Date().toISOString()};db.bookings.push(b)}
+    const single=!b.items.length||b.items.length===1;
+    Object.assign(b,{date:f.date,name:f.name.trim(),wa:f.wa.trim(),svc:f.svc,label:{id:f.label.trim(),en:f.label.trim()},people:f.people,ready:r,start:s,end:r,loc:f.loc.trim(),dp:f.dp,note:f.note.trim()});
+    if(single) b.items=[{d:f.label.trim()+(f.people>1?` (${f.people} orang)`:""),q:1,p:f.total}];
+    save(db);toast(t("saved"));go("detail",{id:b.id,sel:b.date});
+  };
+}
+
+/* ---------- block form ---------- */
+function blockForm(){
+  const f=A.form,e=A.errs;
+  view.innerHTML=`<button class="backlink" id="bk">${t("back")}</button><h1>${t("formBl")}</h1><p class="sub">${t("formBlD")}</p>
+   <div class="field"><label for="b-date">${t("fDate")}</label><input id="b-date" type="date" value="${f.date}"></div>
+   <label class="check"><input type="checkbox" id="b-all" ${f.all?"checked":""}>${t("fAll")}</label>
+   ${f.all?"":`<div class="two"><div class="field"><label for="b-from">${t("fFrom")}</label><input id="b-from" type="time" value="${f.from}"></div><div class="field"><label for="b-to">${t("fTo")}</label><input id="b-to" type="time" value="${f.to}"></div></div>`}
+   <div class="field"><label for="b-reason">${t("fReason")}</label><input id="b-reason" placeholder="${t("reasonPh")}" value="${esc(f.reason)}"></div>
+   ${e.msg?`<p class="err" style="font-size:14px">${e.msg}</p>`:""}
+   <div class="actions"><button class="btn" id="sv">${t("save")}</button><button class="btn ghost" id="cn">${t("cancel")}</button></div>`;
+  const q=s=>view.querySelector(s);
+  const read=()=>{f.date=q("#b-date").value;f.reason=q("#b-reason").value;if(q("#b-from")){f.from=q("#b-from").value;f.to=q("#b-to").value}};
+  q("#b-all").onchange=()=>{read();f.all=q("#b-all").checked;render()};
+  q("#bk").onclick=q("#cn").onclick=()=>f.id?go("detail",{id:f.id}):go("cal");
+  q("#sv").onclick=()=>{
+    read(); const s=f.all?0:toMin(f.from), en=f.all?1440:toMin(f.to);
+    if(!f.date||s==null||en==null){A.errs={msg:t("errReq")};return render()}
+    if(s>=en){A.errs={msg:t("errTime")};return render()}
+    const db=load(); let b=f.id?db.bookings.find(x=>x.id===f.id):null;
+    if(!b){b={id:"k"+Date.now(),code:newCode(db),src:"block"};db.bookings.push(b)}
+    Object.assign(b,{date:f.date,start:s,end:en,ready:null,reason:f.reason.trim(),name:"",people:0});
+    save(db);toast(t("saved"));go("cal",{sel:f.date});
+  };
+}
+
+/* ---------- invoices ---------- */
+function invList(){
+  const list=load().bookings.filter(b=>b.src!=="block").sort((a,b)=>(a.inv===b.inv?0:a.inv==="review"?-1:1)||a.date.localeCompare(b.date));
+  view.innerHTML=`${tabs()}<h1 style="margin-top:18px">${t("invList")}</h1><p class="sub">${t("invListD")}</p>
+   <div class="list">${list.length?list.map(b=>`<button class="item" data-id="${b.id}"><span class="tm">${invNo(b)}</span><span class="grow"><div class="n">${esc(b.name)}</div><div class="s">${fmtShort(b.date)} · ${rp(totals(b).tot)}</div><div style="margin-top:4px">${chipFor(b)}</div></span></button>`).join(""):`<p class="hint">${t("noInv")}</p>`}</div>`;
+  bindTabs();
+  view.querySelectorAll(".item").forEach(b=>b.onclick=()=>go("invoice",{id:b.dataset.id,inv:null}));
+}
+function invoice(){
+  const db=load(), b=db.bookings.find(x=>x.id===A.id);
+  if(!b) return go("invList",{tab:"inv"});
+  if(!A.inv) A.inv={items:JSON.parse(JSON.stringify(b.items||[])),discount:b.discount||0,dp:b.dp||0,invNote:b.invNote??""};
+  const d=A.inv, x=totals({...b,...d});
+  view.innerHTML=`<button class="backlink" id="bk">${t("back")}</button>
+   <h1>${t("invT",{n:invNo(b)})}</h1><div>${chipFor(b)}</div>
+   <div class="label">${t("items")}</div>
+   <div class="ed" style="font-size:11px;color:var(--muted);font-weight:600"><span>${t("desc")}</span><span>${t("qty")}</span><span>${t("price")}</span><span></span></div>
+   ${d.items.map((it,i)=>`<div class="ed"><input data-i="${i}" data-k="d" value="${esc(it.d)}" aria-label="${t("desc")}"><input data-i="${i}" data-k="q" type="number" min="0" value="${it.q}" aria-label="${t("qty")}"><input data-i="${i}" data-k="p" type="number" min="0" step="1000" value="${it.p}" aria-label="${t("price")}"><button data-rm="${i}" aria-label="remove">×</button></div>`).join("")}
+   <button class="linkbtn" id="addI">${t("addItem")}</button>
+   <div class="two" style="margin-top:10px"><div class="field"><label for="i-disc">${t("discount")}</label><input id="i-disc" type="number" min="0" step="1000" value="${d.discount}"></div><div class="field"><label for="i-dp">${t("dp")} (Rp)</label><input id="i-dp" type="number" min="0" step="1000" value="${d.dp}"></div></div>
+   <div class="field"><label for="i-note">${t("invNote")}</label><textarea id="i-note">${esc(d.invNote)}</textarea></div>
+   <div class="label">${t("preview")}</div>
+   <div id="pv">${invHtml(b,d,x)}</div>
+   <div class="actions"><button class="btn" id="send">📲 ${t("sendWa")}</button></div>
+   <p class="hint">${t("shareHelp")}</p>
+   <div class="actions"><button class="btn ghost" id="sv">${t("save")}</button><button class="btn ghost" id="pdf">⬇ ${t("pdf")}</button>${b.inv!=="sent"?`<button class="btn ghost" id="mk">✓ ${t("markSent")}</button>`:""}</div>`;
+  const q=s=>view.querySelector(s);
+  const refresh=()=>{q("#pv").innerHTML=invHtml(b,d,totals({...b,...d}))};
+  view.querySelectorAll("[data-i]").forEach(el=>el.oninput=()=>{const it=d.items[+el.dataset.i];it[el.dataset.k]=el.dataset.k==="d"?el.value:(+el.value||0);refresh()});
+  view.querySelectorAll("[data-rm]").forEach(el=>el.onclick=()=>{d.items.splice(+el.dataset.rm,1);render()});
+  q("#addI").onclick=()=>{d.items.push({d:"",q:1,p:0});render()};
+  q("#i-disc").oninput=e=>{d.discount=+e.target.value||0;refresh()};
+  q("#i-dp").oninput=e=>{d.dp=+e.target.value||0;refresh()};
+  q("#i-note").oninput=e=>{d.invNote=e.target.value;refresh()};
+  q("#bk").onclick=()=>go("detail",{id:b.id,sel:b.date});
+  const persist=(extra={})=>{const db2=load(),bb=db2.bookings.find(y=>y.id===b.id);Object.assign(bb,{items:d.items.filter(i=>i.d||i.p),discount:d.discount,dp:d.dp,invNote:d.invNote},extra);save(db2);return bb};
+  q("#sv").onclick=()=>{persist();toast(t("saved"))};
+  q("#pdf").onclick=()=>{const bb=persist();downloadPdf(bb)};
+  if(q("#mk")) q("#mk").onclick=()=>{persist({inv:"sent"});toast(t("sentOk"));A.inv=null;render()};
+  q("#send").onclick=async()=>{
+    const bb=persist(), blob=pdfBlob(bb), name=invNo(bb)+".pdf";
+    const text=t("waText",{name:bb.name,code:bb.code,date:fmtShort(bb.date)});
+    let shared=false;
+    try{const file=new File([blob],name,{type:"application/pdf"});
+      if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],text});shared=true}}catch(e){if(e&&e.name==="AbortError")return}
+    if(!shared){saveBlob(blob,name);const n=waIntl(bb.wa);window.open("https://wa.me/"+(n||"")+"?text="+encodeURIComponent(text),"_blank")}
+    persist({inv:"sent"});toast(t("sentOk"));A.inv=null;render();
+  };
+}
+function invHtml(b,d,x){
+  const issued=fmtDate(iso(new Date()));
+  return `<div class="inv">
+   <div class="h"><div><div class="logo">Shimmernaya</div><div>Makeup Artist</div><div>WA ${BIZ.wa}</div></div>
+    <div class="meta"><div style="font-weight:700;font-size:15px;letter-spacing:.08em">${t("p_inv")}</div><div>${invNo(b)}</div><div>${t("p_issued")}: ${issued}</div></div></div>
+   <div class="two" style="gap:14px"><div><h3>${t("p_bill")}</h3><div style="font-weight:700">${esc(b.name)}</div><div>${esc(b.wa||"")}</div></div>
+    <div><h3>${t("p_event")}</h3><div>${fmtDate(b.date)}</div><div>${t("readyBy")} ${b.ready!=null?hm(b.ready):hm(b.end)}</div><div>${esc(b.loc||"")}</div></div></div>
+   <table><thead><tr><th>${t("p_desc")}</th><th class="r">${t("p_qty")}</th><th class="r">${t("p_price")}</th><th class="r">${t("p_amt")}</th></tr></thead><tbody>
+    ${d.items.filter(i=>i.d||i.p).map(i=>`<tr><td>${esc(i.d)}</td><td class="r">${i.q}</td><td class="r">${rp(i.p)}</td><td class="r">${rp(i.q*i.p)}</td></tr>`).join("")}</tbody></table>
+   <table style="margin-top:8px"><tbody class="tot">
+    <tr><td></td><td class="r">${t("p_sub")}</td><td class="r" style="width:40%">${rp(x.sub)}</td></tr>
+    ${d.discount?`<tr><td></td><td class="r">${t("p_disc")}</td><td class="r">−${rp(d.discount)}</td></tr>`:""}
+    <tr class="grand"><td></td><td class="r">${t("p_total")}</td><td class="r">${rp(x.tot)}</td></tr>
+    <tr><td></td><td class="r">${t("p_dp")}</td><td class="r">−${rp(d.dp)}</td></tr>
+    <tr class="due"><td></td><td class="r">${t("p_due")}</td><td class="r">${rp(x.due)}</td></tr></tbody></table>
+   <h3>${t("p_pay")}</h3><div>${BIZ.bank}</div>
+   ${d.invNote?`<h3>${t("note")}</h3><div style="white-space:pre-wrap">${esc(d.invNote)}</div>`:""}
+   <p style="margin:16px 0 0;text-align:center;font-style:italic;color:#9C2F55">${t("p_thanks")}</p></div>`;
+}
+
+/* ---------- PDF ---------- */
+function buildPdf(b){
+  const {jsPDF}=window.jspdf, doc=new jsPDF({unit:"mm",format:"a4"}), x=totals(b), W=210, L=18, R=W-18;
+  const berry=[156,47,85], ink=[42,26,36], muted=[122,102,112];
+  doc.setTextColor(...berry);doc.setFont("times","bolditalic");doc.setFontSize(26);doc.text("Shimmernaya",L,26);
+  doc.setFont("helvetica","normal");doc.setFontSize(10);doc.setTextColor(...muted);doc.text(["Makeup Artist","WhatsApp "+BIZ.wa],L,33);
+  doc.setTextColor(...ink);doc.setFont("helvetica","bold");doc.setFontSize(16);doc.text(t("p_inv"),R,24,{align:"right"});
+  doc.setFont("helvetica","normal");doc.setFontSize(10);doc.text([invNo(b),t("p_issued")+": "+fmtDate(iso(new Date()))],R,31,{align:"right"});
+  doc.setDrawColor(...berry);doc.setLineWidth(.8);doc.line(L,42,R,42);
+  let y=52;
+  const head=(s,xx,yy)=>{doc.setFont("helvetica","bold");doc.setFontSize(8.5);doc.setTextColor(...muted);doc.text(s.toUpperCase(),xx,yy)};
+  head(t("p_bill"),L,y);head(t("p_event"),110,y);
+  doc.setTextColor(...ink);doc.setFontSize(10.5);doc.setFont("helvetica","bold");doc.text(b.name||"",L,y+6);
+  doc.setFont("helvetica","normal");doc.text(b.wa||"",L,y+11.5);
+  const ev=[fmtDate(b.date),t("readyBy")+" "+(b.ready!=null?hm(b.ready):hm(b.end)),...doc.splitTextToSize(b.loc||"",R-110)];
+  doc.text(ev,110,y+6);
+  y+=14+ev.length*5;
+  doc.setFillColor(247,228,235);doc.rect(L,y,R-L,8,"F");
+  head(t("p_desc"),L+2,y+5.5);head(t("p_qty"),130,y+5.5);head(t("p_price"),158,y+5.5);
+  doc.text(t("p_amt").toUpperCase(),R-2,y+5.5,{align:"right"});
+  y+=14;doc.setTextColor(...ink);doc.setFontSize(10);doc.setFont("helvetica","normal");
+  (b.items||[]).forEach(i=>{const lines=doc.splitTextToSize(i.d||"",100);doc.text(lines,L+2,y);doc.text(String(i.q),134,y,{align:"right"});doc.text(rp(i.p),175,y,{align:"right"});doc.text(rp(i.q*i.p),R-2,y,{align:"right"});y+=lines.length*5+3;doc.setDrawColor(234,221,226);doc.setLineWidth(.2);doc.line(L,y-2.5,R,y-2.5)});
+  y+=4;
+  const tl=(k,v,opt={})=>{doc.setFont("helvetica",opt.bold?"bold":"normal");doc.setTextColor(...(opt.color||ink));doc.setFontSize(opt.size||10);doc.text(k,150,y,{align:"right"});doc.text(v,R-2,y,{align:"right"});y+=opt.gap||6};
+  tl(t("p_sub"),rp(x.sub));
+  if(b.discount) tl(t("p_disc"),"-"+rp(b.discount));
+  doc.setDrawColor(...ink);doc.setLineWidth(.4);doc.line(110,y-3.5,R,y-3.5);
+  tl(t("p_total"),rp(x.tot),{bold:true,size:12,gap:7});
+  tl(t("p_dp"),"-"+rp(b.dp));
+  tl(t("p_due"),rp(x.due),{bold:true,color:berry,size:11.5,gap:12});
+  head(t("p_pay"),L,y);doc.setTextColor(...ink);doc.setFont("helvetica","normal");doc.setFontSize(10);doc.text(BIZ.bank,L,y+6);y+=14;
+  if(b.invNote){head(t("note"),L,y);doc.setTextColor(...ink);doc.setFont("helvetica","normal");doc.setFontSize(10);const nl=doc.splitTextToSize(b.invNote,R-L);doc.text(nl,L,y+6);y+=8+nl.length*5}
+  doc.setFont("times","italic");doc.setFontSize(12);doc.setTextColor(...berry);doc.text(t("p_thanks"),W/2,282,{align:"center"});
+  return doc;
+}
+const pdfBlob=b=>buildPdf(b).output("blob");
+function saveBlob(blob,name){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
+function downloadPdf(b){saveBlob(pdfBlob(b),invNo(b)+".pdf")}
+
+/* deep link from the "new booking" WhatsApp: admin.html#inv-SHM-1001 */
+function route(){const h=decodeURIComponent(location.hash.slice(1));if(h.startsWith("inv-")){const b=findB(h.slice(4));if(b){A.tab="inv";A.view="invoice";A.id=b.id;A.inv=null;A.sel=b.date}}}
+route();window.addEventListener("hashchange",()=>{route();render()});
+render();
+</script>
+</body>
+</html>

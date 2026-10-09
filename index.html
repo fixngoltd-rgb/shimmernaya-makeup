@@ -7,172 +7,42 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;1,6..96,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
-<style>
-/* Layout: single narrow column, one decision per screen, sticky bottom action bar */
-:root{
-  --bg:#FBF6F8; --surface:#FFFFFF; --ink:#2A1A24; --muted:#7A6670; --line:#EADDE2;
-  --accent:#9C2F55; --accent-ink:#FFFFFF; --accent-soft:#F7E4EB; --ok:#1F7A4D; --ok-soft:#E3F3EA;
-  --off:#C9BCC2; --off-bg:#F3EEF0;
-  --display:"Bodoni Moda", "Didot", Georgia, serif;
-  --body:"Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  /* WhatsApp mock colours stay fixed in both themes */
-  --wa-head:#075E54; --wa-bg:#EFE7DD; --wa-out:#D9FDD3; --wa-in:#FFFFFF; --wa-ink:#111B21; --wa-meta:#667781;
-}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#17101A; --surface:#221923; --ink:#F4E9EE; --muted:#B39CA7; --line:#3A2B34;
-  --accent:#E57EA3; --accent-ink:#22101A; --accent-soft:#3B2130; --ok:#5BC98E; --ok-soft:#1E3529;
-  --off:#5A4852; --off-bg:#1F1720; color-scheme:dark }}
-:root[data-theme="dark"]{
-  --bg:#17101A; --surface:#221923; --ink:#F4E9EE; --muted:#B39CA7; --line:#3A2B34;
-  --accent:#E57EA3; --accent-ink:#22101A; --accent-soft:#3B2130; --ok:#5BC98E; --ok-soft:#1E3529;
-  --off:#5A4852; --off-bg:#1F1720; color-scheme:dark }
-*{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;margin:0}
-.wrap{max-width:480px;margin:0 auto;padding-inline:18px;padding-block:14px 120px}
-button{font:inherit;color:inherit}
-button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-
-.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.brand{font-family:var(--display);font-style:italic;font-size:22px;letter-spacing:.2px}
-.brand small{display:block;font-family:var(--body);font-style:normal;font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
-.lang{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--surface)}
-.lang button{border:0;background:none;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted)}
-.lang button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
-.demo-tag{font-size:10px;color:var(--muted);text-align:right;margin-top:4px}
-
-.progress{display:flex;gap:4px;margin-top:18px}
-.progress i{flex:1;height:3px;border-radius:2px;background:var(--line)}
-.progress i.on{background:var(--accent)}
-.stepno{font-size:12px;color:var(--muted);margin-top:8px;font-variant-numeric:tabular-nums}
-
-h1{font-family:var(--display);font-weight:500;font-size:28px;line-height:1.15;margin:6px 0 4px;text-wrap:balance}
-.sub{color:var(--muted);margin:0 0 18px}
-
-.opts{display:grid;gap:10px}
-.opt{display:flex;align-items:center;gap:14px;text-align:left;width:100%;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;cursor:pointer;transition:border-color .15s,background .15s}
-.opt:hover{border-color:var(--accent)}
-.opt[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
-.opt .ico{font-size:24px;width:32px;text-align:center;flex:none}
-.opt .t{font-weight:600}
-.opt .d{font-size:13px;color:var(--muted)}
-.opt .grow{flex:1;min-width:0}
-.price{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
-
-.cal{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px}
-.calhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.calhead b{font-weight:600}
-.nav{border:1px solid var(--line);background:none;border-radius:10px;width:36px;height:36px;cursor:pointer;font-size:16px}
-.nav:disabled{opacity:.3;cursor:default}
-.grid7{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
-.dow{font-size:11px;color:var(--muted);padding-bottom:4px}
-.day{aspect-ratio:1;max-width:100%;border:0;border-radius:10px;background:none;cursor:pointer;font-weight:600;font-variant-numeric:tabular-nums;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1}
-.day:hover:not(:disabled){background:var(--accent-soft)}
-.day:disabled{color:var(--off);cursor:not-allowed;text-decoration:line-through}
-.day .full{font-size:8px;font-weight:600;text-decoration:none;letter-spacing:.03em}
-.day[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
-.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
-
-.stepper{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-top:18px}
-.stepper .ctl{display:flex;align-items:center;gap:14px}
-.stepper button{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--line);background:none;font-size:20px;cursor:pointer}
-.stepper button:disabled{opacity:.3}
-.stepper output{font-size:20px;font-weight:700;min-width:20px;text-align:center;font-variant-numeric:tabular-nums}
-.label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:20px 0 8px}
-
-.slots{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.slot{border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 0;font-weight:600;cursor:pointer;font-variant-numeric:tabular-nums}
-.slot:hover:not(:disabled){border-color:var(--accent)}
-.slot:disabled{background:var(--off-bg);color:var(--off);border-color:transparent;text-decoration:line-through;cursor:not-allowed}
-.slot[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.hint{font-size:13px;color:var(--muted);margin-top:12px}
-
-.field{display:grid;gap:6px;margin-bottom:14px}
-.field label{font-weight:600;font-size:14px}
-.field input,.field textarea{width:100%;padding:13px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);font:inherit;color:var(--ink)}
-.field textarea{min-height:80px;resize:vertical}
-.err{color:#C4314B;font-size:12px}
-
-.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px}
-.row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;font-size:14px}
-.row span:first-child{color:var(--muted)}
-.row span:last-child{text-align:right;font-weight:600;min-width:0}
-.row.total{border-top:1px dashed var(--line);margin-top:6px;padding-top:12px;font-size:15px}
-.due{display:flex;justify-content:space-between;align-items:baseline;background:var(--accent-soft);border-radius:14px;padding:14px 16px;margin-top:12px}
-.due b{font-size:22px;font-variant-numeric:tabular-nums}
-.paygrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.paym{border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 4px;font-weight:600;font-size:13px;cursor:pointer}
-.paym[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
-.qr{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:14px}
-.qr svg{background:#fff;padding:10px;border-radius:12px;width:170px;height:170px}
-.bank{margin-top:14px;font-size:14px}
-.bank code{font-size:17px;font-weight:700;letter-spacing:.05em}
-
-.bar{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:12px 18px calc(12px + env(safe-area-inset-bottom,0px))}
-.bar .in{max-width:444px;margin:0 auto;display:flex;gap:10px}
-.btn{flex:1;border:0;border-radius:14px;padding:16px;font-weight:700;font-size:16px;cursor:pointer;background:var(--accent);color:var(--accent-ink)}
-.btn:disabled{opacity:.35;cursor:not-allowed}
-.back{flex:none;width:56px;border:1.5px solid var(--line);background:var(--surface);border-radius:14px;cursor:pointer;font-size:18px}
-
-.spin{display:inline-block;width:18px;height:18px;border:2.5px solid currentColor;border-right-color:transparent;border-radius:50%;animation:r .7s linear infinite;vertical-align:-3px}
-@keyframes r{to{transform:rotate(360deg)}}
-@media (prefers-reduced-motion:reduce){.spin{animation-duration:2s}}
-
-.done{text-align:center;padding-top:10px}
-.tick{width:64px;height:64px;border-radius:50%;background:var(--ok-soft);color:var(--ok);display:grid;place-items:center;font-size:32px;margin:0 auto 10px}
-.demo{border:1.5px dashed var(--line);border-radius:18px;padding:14px;margin-top:22px}
-.demo h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;font-weight:700}
-.wa{border-radius:14px;overflow:hidden;background:var(--wa-bg)}
-.wa .hd{background:var(--wa-head);color:#fff;padding:10px 14px;display:flex;align-items:center;gap:10px}
-.wa .av{width:32px;height:32px;border-radius:50%;background:#ffffff33;display:grid;place-items:center;font-size:15px}
-.wa .nm{font-weight:600;font-size:14px;line-height:1.2}
-.wa .nm small{display:block;font-weight:400;opacity:.8;font-size:11px}
-.wa .body{padding:12px}
-.bub{max-width:88%;padding:8px 10px 18px;border-radius:10px;font-size:13.5px;line-height:1.45;color:var(--wa-ink);white-space:pre-wrap;position:relative;box-shadow:0 1px .5px #0002;word-wrap:break-word}
-.bub.in{background:var(--wa-in);border-top-left-radius:2px}
-.bub .tm{position:absolute;right:8px;bottom:3px;font-size:10px;color:var(--wa-meta)}
-.ev{display:flex;gap:12px;background:var(--surface);border-radius:12px;padding:12px;border:1px solid var(--line)}
-.ev .strip{width:4px;border-radius:2px;background:var(--accent);flex:none}
-.ev .t{font-weight:700}
-.ev .m{font-size:13px;color:var(--muted)}
-.again{margin-top:22px;background:none;border:1.5px solid var(--line);border-radius:14px;padding:13px;width:100%;font-weight:600;cursor:pointer}
-</style>
+<link rel="stylesheet" href="shared.css">
 </head>
 <body>
-
 <div class="wrap">
   <div class="top">
-    <div class="brand">Shimmernaya<small id="tagline"></small></div>
-    <div>
-      <div class="lang" role="group" aria-label="Language">
-        <button id="lang-id" aria-pressed="true">ID</button>
-        <button id="lang-en" aria-pressed="false">EN</button>
-      </div>
-      <div class="demo-tag" id="demotag"></div>
-    </div>
+    <a class="brand" href="#" id="home">Shimmernaya<small id="tagline"></small></a>
+    <div id="langslot"></div>
   </div>
   <div id="prog"></div>
   <main id="view"></main>
+  <p class="foot" id="foot"></p>
 </div>
 <div class="bar" id="bar"><div class="in"><button class="back" id="backBtn" aria-label="Back">←</button><button class="btn" id="nextBtn"></button></div></div>
 
+<script src="shared.js"></script>
 <script>
-const T = {
-id:{tagline:"Makeup Artist · Booking",demotag:"tombol bahasa (demo)",step:"Langkah {a} dari {b}",
- next:"Lanjut",pay:"Bayar {x}",paying:"Memproses…",back:"Kembali",
+const T={
+id:{tagline:"Makeup Artist · Booking",step:"Langkah {a} dari {b}",next:"Lanjut",pay:"Bayar {x}",paying:"Memproses…",back:"Kembali",
+ homeT:"Halo Kak! Mau dirias untuk acara apa?",homeD:"Booking langsung di sini — pilih acara, tanggal, dan jam Kakak harus siap. Atau cek dulu tanggal yang masih kosong.",
+ bookNow:"Booking sekarang",bookNowD:"± 2 menit, langsung dapat konfirmasi",checkAv:"Cek tanggal kosong dulu",checkAvD:"Lihat kalender tanpa harus booking",
+ avT:"Kalender ketersediaan",avD:"Lihat tanggal yang masih bisa. Booking bisa nanti kapan saja.",avOpen:"Banyak jam kosong",avLim:"Tinggal sedikit",avFull:"Penuh",avPick:"Pilih tanggal untuk lihat detail.",
+ avDayOpen:"Masih banyak jam kosong di tanggal ini.",avDayLim:"Tinggal {n} pilihan jam di tanggal ini — sebaiknya booking segera.",avDayFull:"Tanggal ini sudah penuh. Coba tanggal lain ya.",bookThis:"Booking tanggal ini",
  s1:"Mau makeup untuk acara apa, Kak?",s1d:"Pilih satu. Harga dan jadwal muncul di langkah berikutnya.",
- s2:"Tanggal acaranya kapan?",s2d:"Tanggal yang dicoret sudah penuh.",full:"PENUH",legAvail:"Tersedia",legFull:"Penuh / lewat",
+ s2:"Tanggal acaranya kapan?",s2d:"Tanggal yang dicoret sudah penuh.",full:"PENUH",
  s3:"Pilih paket",s3d:"Harga per orang. Tambah orang di bawah kalau ada yang ikut dirias.",people:"Jumlah orang dirias",peopleD:"Termasuk Kakak",extra:"+{x} / orang tambahan",
- s4:"Jam berapa Kakak harus sudah siap?",s4d:"Pilih jam Kakak harus sudah selesai dirias. Jam mulai makeup kami yang atur (±{d} sebelumnya).",s4h:"Jam yang dicoret sudah terisi jadwal lain.",
+ s4:"Jam berapa Kakak harus sudah siap?",s4d:"Pilih jam Kakak harus sudah selesai dirias. Jam mulai makeup kami yang atur (±{d} sebelumnya).",s4h:"Jam yang dicoret sudah terisi jadwal lain.",until:"Siap jam {t}",
  s5:"Lokasi & data Kakak",loc:"Di mana dirias?",studio:"Di studio",studioD:"Tanpa biaya tambahan",home:"Datang ke lokasi Kakak",homeD:"Biaya transport ditambahkan",
- area:"Area lokasi",inCity:"Dalam kota",outCity:"Luar kota",address:"Alamat lengkap",addressPh:"Nama gedung / rumah, jalan, kecamatan",
+ area:"Area lokasi",inCity:"Dalam kota",outCity:"Luar kota",address:"Alamat lengkap",addressPh:"Nama gedung / rumah, jalan, kecamatan",you:"Data Kakak",
  name:"Nama",namePh:"Nama Kakak",wa:"Nomor WhatsApp",waPh:"08xx xxxx xxxx",note:"Catatan (opsional)",notePh:"Misal: pakai hijab, kulit sensitif, referensi look",
  errName:"Isi nama dulu ya",errWa:"Nomor WhatsApp belum benar",errAddr:"Isi alamat lokasi ya",
  s6:"Cek lagi & bayar DP",s6d:"Bayar DP 50% untuk mengunci jadwal. Sisanya dibayar di hari acara.",
  service:"Layanan",pkg:"Paket",date:"Tanggal",time:"Siap jam",location:"Lokasi",subtotal:"Paket × {n} orang",transport:"Transport",total:"Total",dueNow:"Bayar sekarang (DP 50%)",remain:"Sisa dibayar di hari H",
  method:"Metode pembayaran",qrisD:"Scan pakai e-wallet atau m-banking apa saja",bankD:"Transfer ke rekening",fake:"Simulasi — tidak ada uang yang dipotong",
  doneT:"Booking terkonfirmasi!",doneD:"Makasih, Kak {n}! Konfirmasi sudah dikirim ke WhatsApp {w}.",code:"Kode booking",
- demoClient:"Demo · WhatsApp yang diterima klien",demoArtist:"Demo · WhatsApp yang diterima MUA",demoCal:"Demo · Otomatis masuk Google Calendar",
- again:"Ulangi demo",until:"Siap jam {t}",hours:"{h} jam",hoursM:"{h} jam {m} menit",min:"{m} menit",
+ demoClient:"Demo · WhatsApp yang diterima klien",demoArtist:"Demo · WhatsApp yang diterima MUA",demoCal:"Demo · Otomatis masuk kalender",
+ again:"Ulangi demo",studioAddr:"Studio Shimmernaya",noNote:"Tidak ada catatan",
  waClient:`Halo Kak {name}! 💕
 Booking kamu sudah terkonfirmasi ✅
 
@@ -186,7 +56,7 @@ DP diterima: {dp}
 Sisa pelunasan: {rem} (dibayar di hari H)
 
 Kode booking: {code}
-Aku chat Kakak H-1 untuk kabari jam mulai makeup ya. Sampai ketemu! 🤍
+Invoice resmi menyusul dari aku ya. H-1 aku kabari jam mulai makeup. Sampai ketemu! 🤍
 — Shimmernaya`,
  waArtist:`🔔 BOOKING BARU — DP SUDAH MASUK
 
@@ -201,27 +71,28 @@ Aku chat Kakak H-1 untuk kabari jam mulai makeup ya. Sampai ketemu! 🤍
 
 💰 DP masuk: {dp} via {method}
 Sisa di hari H: {rem}
-
-✅ Sudah masuk kalender
-Kode: {code}`,
- noNote:"Tidak ada catatan",calNote:"DP lunas {dp} · sisa {rem} · WA {wa}",studioAddr:"Studio Shimmernaya"
-},
-en:{tagline:"Makeup Artist · Booking",demotag:"language toggle (demo)",step:"Step {a} of {b}",
- next:"Continue",pay:"Pay {x}",paying:"Processing…",back:"Back",
+✅ Sudah masuk kalender`,
+ invReady:"📄 Invoice {inv} siap dicek sebelum dikirim ke klien:",openInv:"Buka & cek invoice",
+ foot:"Untuk Shimmernaya: <a href=\"admin.html\">buka halaman admin</a>"},
+en:{tagline:"Makeup Artist · Booking",step:"Step {a} of {b}",next:"Continue",pay:"Pay {x}",paying:"Processing…",back:"Back",
+ homeT:"Hi! What are you getting your makeup done for?",homeD:"Book right here — pick the occasion, the date and the time you need to be ready. Or check which dates are still free first.",
+ bookNow:"Book now",bookNowD:"About 2 minutes, instant confirmation",checkAv:"Check free dates first",checkAvD:"See the calendar without booking",
+ avT:"Availability calendar",avD:"See which dates are still open. You can book any time later.",avOpen:"Plenty of times",avLim:"Only a few left",avFull:"Full",avPick:"Pick a date to see details.",
+ avDayOpen:"Plenty of times still open on this date.",avDayLim:"Only {n} ready-by times left on this date — best to book soon.",avDayFull:"This date is fully booked. Try another date.",bookThis:"Book this date",
  s1:"What's the makeup for?",s1d:"Pick one. Prices and times show up in the next steps.",
- s2:"When is the event?",s2d:"Crossed-out dates are fully booked.",full:"FULL",legAvail:"Available",legFull:"Full / past",
+ s2:"When is the event?",s2d:"Crossed-out dates are fully booked.",full:"FULL",
  s3:"Choose a package",s3d:"Price per person. Add people below if others are getting done too.",people:"Number of people",peopleD:"Including you",extra:"+{x} / extra person",
- s4:"What time do you need to be ready?",s4d:"Pick the time your makeup must be finished. We plan the start time (about {d} before).",s4h:"Crossed-out times are already booked.",
+ s4:"What time do you need to be ready?",s4d:"Pick the time your makeup must be finished. We plan the start time (about {d} before).",s4h:"Crossed-out times are already booked.",until:"Ready by {t}",
  s5:"Location & your details",loc:"Where will the makeup be done?",studio:"At the studio",studioD:"No extra charge",home:"At your location",homeD:"Travel fee added",
- area:"Area",inCity:"In town",outCity:"Out of town",address:"Full address",addressPh:"Venue / house, street, district",
+ area:"Area",inCity:"In town",outCity:"Out of town",address:"Full address",addressPh:"Venue / house, street, district",you:"Your details",
  name:"Name",namePh:"Your name",wa:"WhatsApp number",waPh:"08xx xxxx xxxx",note:"Notes (optional)",notePh:"E.g. wearing hijab, sensitive skin, look reference",
  errName:"Please enter your name",errWa:"That WhatsApp number doesn't look right",errAddr:"Please enter the address",
  s6:"Review & pay deposit",s6d:"Pay a 50% deposit to lock in the slot. The rest is paid on the day.",
  service:"Service",pkg:"Package",date:"Date",time:"Ready by",location:"Location",subtotal:"Package × {n} people",transport:"Travel",total:"Total",dueNow:"Pay now (50% deposit)",remain:"Remaining, paid on the day",
  method:"Payment method",qrisD:"Scan with any e-wallet or banking app",bankD:"Transfer to account",fake:"Simulation — no money is taken",
  doneT:"Booking confirmed!",doneD:"Thank you, {n}! A confirmation has been sent to WhatsApp {w}.",code:"Booking code",
- demoClient:"Demo · WhatsApp the client receives",demoArtist:"Demo · WhatsApp the artist receives",demoCal:"Demo · Added to Google Calendar automatically",
- again:"Restart demo",until:"Ready by {t}",hours:"{h} hr",hoursM:"{h} hr {m} min",min:"{m} min",
+ demoClient:"Demo · WhatsApp the client receives",demoArtist:"Demo · WhatsApp the artist receives",demoCal:"Demo · Added to the calendar automatically",
+ again:"Restart demo",studioAddr:"Shimmernaya Studio",noNote:"No notes",
  waClient:`Hi {name}! 💕
 Your booking is confirmed ✅
 
@@ -235,7 +106,7 @@ Deposit received: {dp}
 Remaining: {rem} (paid on the day)
 
 Booking code: {code}
-I'll message you the day before with your makeup start time. See you soon! 🤍
+Your official invoice will follow from me. I'll message you the day before with your makeup start time. See you soon! 🤍
 — Shimmernaya`,
  waArtist:`🔔 NEW BOOKING — DEPOSIT PAID
 
@@ -250,140 +121,105 @@ I'll message you the day before with your makeup start time. See you soon! 🤍
 
 💰 Deposit in: {dp} via {method}
 Due on the day: {rem}
+✅ Added to calendar`,
+ invReady:"📄 Invoice {inv} is ready to check before it goes to the client:",openInv:"Open & check invoice",
+ foot:"For Shimmernaya: <a href=\"admin.html\">open the admin page</a>"}};
+const t=(k,v={})=>T[LANG][k].replace(/\{(\w+)\}/g,(_,x)=>v[x]??"");
 
-✅ Added to calendar
-Code: {code}`,
- noNote:"No notes",calNote:"Deposit paid {dp} · remaining {rem} · WA {wa}",studioAddr:"Shimmernaya Studio"
-}};
-
-/* Services and prices (Rupiah). Duration in minutes per first person; each extra person adds 45 min. */
-const SERVICES=[
- {id:"bridal",ico:"👰",n:{id:"Pengantin",en:"Bridal"},d:{id:"Akad, resepsi, atau keduanya",en:"Ceremony, reception or both"},extra:350000,pk:[
-   {id:"akad",n:{id:"Akad / Pemberkatan",en:"Ceremony"},d:{id:"Makeup + hairdo/hijab do",en:"Makeup + hair or hijab styling"},p:2500000,m:150},
-   {id:"resepsi",n:{id:"Resepsi",en:"Reception"},d:{id:"Full glam + hairdo/hijab do",en:"Full glam + hair or hijab styling"},p:3000000,m:180},
-   {id:"both",n:{id:"Akad + Resepsi",en:"Ceremony + Reception"},d:{id:"2 look, touch-up di antara acara",en:"2 looks, touch-up in between"},p:5000000,m:300}]},
- {id:"wisuda",ico:"🎓",n:{id:"Wisuda",en:"Graduation"},d:{id:"Natural flawless, tahan seharian",en:"Natural, lasts all day"},extra:300000,pk:[
-   {id:"basic",n:{id:"Makeup saja",en:"Makeup only"},d:{id:"Natural / soft glam",en:"Natural / soft glam"},p:450000,m:60},
-   {id:"plus",n:{id:"Makeup + hijab do / hairdo",en:"Makeup + hijab or hair styling"},d:{id:"Paling sering dipilih",en:"Most popular"},p:600000,m:90}]},
- {id:"party",ico:"✨",n:{id:"Pesta / Kondangan",en:"Party / Wedding guest"},d:{id:"Tamu undangan, ulang tahun, gala",en:"Guest, birthday, gala"},extra:300000,pk:[
-   {id:"soft",n:{id:"Soft glam",en:"Soft glam"},d:{id:"Makeup saja",en:"Makeup only"},p:400000,m:60},
-   {id:"glam",n:{id:"Full glam + hairdo/hijab do",en:"Full glam + hair or hijab"},d:{id:"Bulu mata & styling termasuk",en:"Lashes & styling included"},p:600000,m:90}]},
- {id:"lamaran",ico:"💍",n:{id:"Lamaran / Tunangan",en:"Engagement"},d:{id:"Look elegan untuk acara keluarga",en:"Elegant look for the family event"},extra:350000,pk:[
-   {id:"std",n:{id:"Paket Lamaran",en:"Engagement package"},d:{id:"Makeup + hairdo/hijab do",en:"Makeup + hair or hijab styling"},p:1200000,m:120}]},
- {id:"photo",ico:"📸",n:{id:"Photoshoot",en:"Photoshoot"},d:{id:"Prewedding, produk, personal",en:"Pre-wedding, product, personal"},extra:350000,pk:[
-   {id:"one",n:{id:"1 look",en:"1 look"},d:{id:"Tetap di lokasi 2 jam",en:"Stays on set 2 hrs"},p:500000,m:120},
-   {id:"two",n:{id:"2 look",en:"2 looks"},d:{id:"Ganti look di tengah sesi",en:"Look change mid-shoot"},p:850000,m:180}]}
-];
-const TRANSPORT={in:100000,out:250000};
-const SLOTS=[6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]; // "ready by" hours the client can pick
-const EARLIEST=4*60; // makeup can start from 04.00
-const DAY_END=21; // must finish by 21.00
-const BUFFER=60;  // travel buffer around existing bookings (min)
-
-let L="id";
-const S={step:1,svc:null,pkg:null,n:1,date:null,time:null,loc:"studio",area:"in",addr:"",name:"",wa:"",note:"",pay:"qris",month:0,errs:{},code:null,paid:false,busy:false};
-
-const t=(k,v={})=>T[L][k].replace(/\{(\w+)\}/g,(_,x)=>v[x]??"");
-const rp=x=>"Rp"+Math.round(x).toLocaleString("id-ID");
-const hm=h=>{const H=Math.floor(h/60),M=h%60;return String(H).padStart(2,"0")+"."+String(M).padStart(2,"0")};
-const dur=m=>{const h=Math.floor(m/60),r=m%60;return h?(r?t("hoursM",{h,m:r}):t("hours",{h})):t("min",{m:r})};
-const svc=()=>SERVICES.find(s=>s.id===S.svc);
-const pkg=()=>svc()?.pk.find(p=>p.id===S.pkg);
-const totalMin=()=>(pkg()?.m||0)+45*(S.n-1);
-const today=new Date();today.setHours(0,0,0,0);
-const key=d=>d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
-const fmtDate=d=>d.toLocaleDateString(L==="id"?"id-ID":"en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
-
-/* Fake calendar: deterministic existing bookings per day (stands in for her Google Calendar) */
-function rnd(seed){let x=seed%2147483647;return()=> (x=x*16807%2147483647)/2147483647}
-const busyCache={};
-function busy(d){
-  const k=key(d); if(busyCache[k]) return busyCache[k];
-  const r=rnd(d.getFullYear()*400+d.getMonth()*32+d.getDate()+7);
-  const out=[]; const wk=d.getDay()===0||d.getDay()===6;
-  if(r()<(wk?.22:.08)) out.push([4*60,DAY_END*60]); // fully booked day (wedding season weekends)
-  else{const c=r()<.35?0:(r()<.55?1:2);
-    for(let i=0;i<c;i++){const s=(6+Math.floor(r()*9))*60,e=s+(2+Math.floor(r()*3))*60;out.push([s,e]);}}
-  return busyCache[k]=out;
-}
-function slotFree(d,h,len){ // h = ready-by hour; makeup runs back from it
-  const e=h*60,s=e-len; if(s<EARLIEST||e>DAY_END*60) return false;
-  return !busy(d).some(([a,b])=>s<b+BUFFER && e>a-BUFFER);
-}
-function dayOpen(d,len){ if(d<=today) return false; return SLOTS.some(h=>slotFree(d,h,len)); }
+const blank=()=>({step:0,mode:"flow",svc:null,pkg:null,n:1,date:null,time:null,loc:"studio",area:"in",addr:"",name:"",wa:"",note:"",pay:"qris",month:0,avMonth:0,avSel:null,errs:{},booking:null,busy:false});
+let S=blank();
+const svc=()=>svcById(S.svc), pkg=()=>svc()?.pk.find(p=>p.id===S.pkg);
+const totalMin=()=>(pkg()?.m||0)+EXTRA_MIN*(S.n-1);
 const minLen=()=>Math.min(...svc().pk.map(p=>p.m));
-
 const prices=()=>{const p=pkg();const sub=p.p+svc().extra*(S.n-1);const tr=S.loc==="home"?TRANSPORT[S.area]:0;const tot=sub+tr;const dp=Math.ceil(tot/2/1000)*1000;return{sub,tr,tot,dp,rem:tot-dp}};
 const locText=()=>S.loc==="studio"?t("studioAddr"):S.addr+" ("+(S.area==="in"?t("inCity"):t("outCity"))+")";
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
 const view=document.getElementById("view"),next=document.getElementById("nextBtn"),back=document.getElementById("backBtn"),bar=document.getElementById("bar");
+document.getElementById("langslot").append(langToggle(render));
+document.getElementById("home").onclick=e=>{e.preventDefault();S=blank();render();scrollTo(0,0)};
+const go=st=>{S.step=st;render();scrollTo(0,0)};
 
 function render(){
-  document.documentElement.lang=L;
   document.getElementById("tagline").textContent=t("tagline");
-  document.getElementById("demotag").textContent=t("demotag");
+  document.getElementById("foot").innerHTML=t("foot");
   back.setAttribute("aria-label",t("back"));
-  const N=6;
-  document.getElementById("prog").innerHTML=S.step<=N?`<div class="progress">${Array.from({length:N},(_,i)=>`<i class="${i<S.step?"on":""}"></i>`).join("")}</div><div class="stepno">${t("step",{a:S.step,b:N})}</div>`:"";
-  bar.hidden=S.step>N; back.hidden=S.step===1;
-  next.textContent=t("next"); next.disabled=false;
-  ({1:s1,2:s2,3:s3,4:s4,5:s5,6:s6,7:s7})[S.step]();
+  const N=6, inFlow=S.step>=1&&S.step<=N&&S.mode==="flow";
+  document.getElementById("prog").innerHTML=inFlow?`<div class="progress">${Array.from({length:N},(_,i)=>`<i class="${i<S.step?"on":""}"></i>`).join("")}</div><div class="stepno">${t("step",{a:S.step,b:N})}</div>`:"";
+  bar.hidden=!inFlow&&S.mode!=="avail"; back.hidden=false;
+  next.hidden=false; next.textContent=t("next"); next.disabled=false;
+  if(S.mode==="avail") return avail();
+  ({0:home,1:s1,2:s2,3:s3,4:s4,5:s5,6:s6,7:s7})[S.step]();
+}
+
+function home(){
+  bar.hidden=true;
+  view.innerHTML=`<h1 class="hero">${t("homeT")}</h1><p class="sub">${t("homeD")}</p>
+  <div class="opts">
+   <button class="opt primary" id="b1"><span class="ico">💄</span><span class="grow"><div class="t">${t("bookNow")}</div><div class="d">${t("bookNowD")}</div></span><span>→</span></button>
+   <button class="opt" id="b2"><span class="ico">📅</span><span class="grow"><div class="t">${t("checkAv")}</div><div class="d">${t("checkAvD")}</div></span><span>→</span></button>
+  </div>`;
+  view.querySelector("#b1").onclick=()=>go(1);
+  view.querySelector("#b2").onclick=()=>{S.mode="avail";render();scrollTo(0,0)};
+}
+
+/* Availability-only calendar: no service needed, browse 12 months */
+function avail(){
+  const db=load(), base=new Date(TODAY.getFullYear(),TODAY.getMonth()+S.avMonth,1);
+  const grid=monthGrid(base,(ds,d)=>{const st=dayStatus(ds,db);const past=st==="past";
+    return `<button class="day ${st==="full"?"st-full":""} ${ds===iso(TODAY)?"today":""}" data-ds="${ds}" ${past?"disabled":""} aria-pressed="${S.avSel===ds}">${d}${past?"":`<i class="dot ${st==="open"?"ok":st==="limited"?"warn":"full"}"></i>`}</button>`});
+  let panel=`<p class="hint">${t("avPick")}</p>`;
+  if(S.avSel){const st=dayStatus(S.avSel,db);const n=READY_SLOTS.filter(h=>readyFree(S.avSel,h,90,db)).length;
+    panel=`<div class="card" style="margin-top:14px"><div style="font-weight:700">${fmtDate(S.avSel)}</div><p class="hint" style="margin:6px 0 ${st==="full"?0:12}px">${st==="open"?t("avDayOpen"):st==="limited"?t("avDayLim",{n}):t("avDayFull")}</p>
+      ${st==="full"?"":`<button class="btn" id="bookThis" style="width:100%">${t("bookThis")}</button>`}</div>`;}
+  view.innerHTML=`<h1>${t("avT")}</h1><p class="sub">${t("avD")}</p>
+   <div class="cal"><div class="calhead"><button class="nav" id="pm" ${S.avMonth===0?"disabled":""} aria-label="prev">‹</button><b>${monthName(base)}</b><button class="nav" id="nm" ${S.avMonth>=11?"disabled":""} aria-label="next">›</button></div>${grid}
+   <div class="legend"><span><i class="dot ok"></i>${t("avOpen")}</span><span><i class="dot warn"></i>${t("avLim")}</span><span><i class="dot full"></i>${t("avFull")}</span></div></div>${panel}`;
+  view.querySelector("#pm").onclick=()=>{S.avMonth--;render()};
+  view.querySelector("#nm").onclick=()=>{S.avMonth++;render()};
+  view.querySelectorAll(".day:not(:disabled)").forEach(b=>b.onclick=()=>{S.avSel=b.dataset.ds;render()});
+  const bt=view.querySelector("#bookThis"); if(bt) bt.onclick=()=>{S.mode="flow";S.date=S.avSel;S.month=S.avMonth;go(1)};
+  next.textContent=t("bookNow"); next.onclickAvail=true;
 }
 
 function s1(){
   view.innerHTML=`<h1>${t("s1")}</h1><p class="sub">${t("s1d")}</p><div class="opts">${SERVICES.map(s=>`
-   <button class="opt" data-v="${s.id}" aria-pressed="${S.svc===s.id}"><span class="ico">${s.ico}</span><span class="grow"><div class="t">${s.n[L]}</div><div class="d">${s.d[L]}</div></span></button>`).join("")}</div>`;
-  view.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{if(S.svc!==b.dataset.v){S.svc=b.dataset.v;S.pkg=null;S.date=null;S.time=null}S.step=2;render();scrollTo(0,0)});
+   <button class="opt" data-v="${s.id}" aria-pressed="${S.svc===s.id}"><span class="ico">${s.ico}</span><span class="grow"><div class="t">${s.n[LANG]}</div><div class="d">${s.d[LANG]}</div></span></button>`).join("")}</div>`;
+  view.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{if(S.svc!==b.dataset.v){S.svc=b.dataset.v;S.pkg=null;S.time=null;if(S.date&&!dayOpenFor(S.date,minLen()))S.date=null}go(2)});
   next.disabled=!S.svc;
 }
-
 function s2(){
-  const base=new Date(today.getFullYear(),today.getMonth()+S.month,1);
-  const first=(base.getDay()+6)%7, days=new Date(base.getFullYear(),base.getMonth()+1,0).getDate();
-  const dows=L==="id"?["Sen","Sel","Rab","Kam","Jum","Sab","Min"]:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-  const len=minLen(); let cells="";
-  for(let i=0;i<first;i++) cells+="<span></span>";
-  for(let d=1;d<=days;d++){
-    const dt=new Date(base.getFullYear(),base.getMonth(),d); const past=dt<=today; const open=dayOpen(dt,len);
-    const sel=S.date&&key(S.date)===key(dt);
-    cells+=`<button class="day" data-d="${d}" ${open?"":"disabled"} aria-pressed="${!!sel}">${d}${!open&&!past?`<span class="full">${t("full")}</span>`:""}</button>`;
-  }
+  const db=load(), base=new Date(TODAY.getFullYear(),TODAY.getMonth()+S.month,1), len=minLen();
+  const grid=monthGrid(base,(ds,d)=>{const past=fromIso(ds)<=TODAY, open=dayOpenFor(ds,len,db);
+    return `<button class="day" data-ds="${ds}" ${open?"":"disabled"} aria-pressed="${S.date===ds}">${d}${!open&&!past?`<span class="full">${t("full")}</span>`:""}</button>`});
   view.innerHTML=`<h1>${t("s2")}</h1><p class="sub">${t("s2d")}</p>
-   <div class="cal"><div class="calhead"><button class="nav" id="pm" ${S.month===0?"disabled":""} aria-label="prev">‹</button><b>${base.toLocaleDateString(L==="id"?"id-ID":"en-GB",{month:"long",year:"numeric"})}</b><button class="nav" id="nm" ${S.month>=5?"disabled":""} aria-label="next">›</button></div>
-   <div class="grid7">${dows.map(x=>`<span class="dow">${x}</span>`).join("")}${cells}</div></div>`;
+   <div class="cal"><div class="calhead"><button class="nav" id="pm" ${S.month===0?"disabled":""} aria-label="prev">‹</button><b>${monthName(base)}</b><button class="nav" id="nm" ${S.month>=11?"disabled":""} aria-label="next">›</button></div>${grid}</div>`;
   view.querySelector("#pm").onclick=()=>{S.month--;render()};
   view.querySelector("#nm").onclick=()=>{S.month++;render()};
-  view.querySelectorAll(".day:not(:disabled)").forEach(b=>b.onclick=()=>{S.date=new Date(base.getFullYear(),base.getMonth(),+b.dataset.d);S.time=null;S.step=3;render();scrollTo(0,0)});
+  view.querySelectorAll(".day:not(:disabled)").forEach(b=>b.onclick=()=>{S.date=b.dataset.ds;S.time=null;go(3)});
   next.disabled=!S.date;
 }
-
 function s3(){
   const s=svc(); if(s.pk.length===1&&!S.pkg) S.pkg=s.pk[0].id;
-  view.innerHTML=`<h1>${t("s3")}</h1><p class="sub">${s.n[L]} · ${fmtDate(S.date)}<br>${t("s3d")}</p><div class="opts">${s.pk.map(p=>`
-   <button class="opt" data-v="${p.id}" aria-pressed="${S.pkg===p.id}"><span class="grow"><div class="t">${p.n[L]}</div><div class="d">${p.d[L]} · ±${dur(p.m)}</div></span><span class="price">${rp(p.p)}</span></button>`).join("")}</div>
-   <div class="stepper"><div><div class="t" style="font-weight:600">${t("people")}</div><div class="d" style="font-size:13px;color:var(--muted)">${t("peopleD")} · ${t("extra",{x:rp(s.extra)})}</div></div>
+  view.innerHTML=`<h1>${t("s3")}</h1><p class="sub">${s.n[LANG]} · ${fmtDate(S.date)}<br>${t("s3d")}</p><div class="opts">${s.pk.map(p=>`
+   <button class="opt" data-v="${p.id}" aria-pressed="${S.pkg===p.id}"><span class="grow"><div class="t">${p.n[LANG]}</div><div class="d">${p.d[LANG]} · ±${durTxt(p.m)}</div></span><span class="price">${rp(p.p)}</span></button>`).join("")}</div>
+   <div class="stepper"><div><div style="font-weight:600">${t("people")}</div><div style="font-size:13px;color:var(--muted)">${t("peopleD")} · ${t("extra",{x:rp(s.extra)})}</div></div>
    <div class="ctl"><button id="mn" aria-label="minus" ${S.n<=1?"disabled":""}>−</button><output>${S.n}</output><button id="pl" aria-label="plus" ${S.n>=6?"disabled":""}>+</button></div></div>`;
   view.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{S.pkg=b.dataset.v;S.time=null;render()});
   view.querySelector("#mn").onclick=()=>{S.n--;S.time=null;render()};
   view.querySelector("#pl").onclick=()=>{S.n++;S.time=null;render()};
   next.disabled=!S.pkg;
 }
-
 function s4(){
-  const len=totalMin();
-  const any=SLOTS.some(h=>slotFree(S.date,h,len));
-  view.innerHTML=`<h1>${t("s4")}</h1><p class="sub">${fmtDate(S.date)}<br>${t("s4d",{d:dur(len)})}</p>
-   <div class="slots">${SLOTS.map(h=>`<button class="slot" data-h="${h}" ${slotFree(S.date,h,len)?"":"disabled"} aria-pressed="${S.time===h}">${hm(h*60)}</button>`).join("")}</div>
+  const db=load(), len=totalMin(), any=READY_SLOTS.some(h=>readyFree(S.date,h,len,db));
+  view.innerHTML=`<h1>${t("s4")}</h1><p class="sub">${fmtDate(S.date)}<br>${t("s4d",{d:durTxt(len)})}</p>
+   <div class="slots">${READY_SLOTS.map(h=>`<button class="slot" data-h="${h}" ${readyFree(S.date,h,len,db)?"":"disabled"} aria-pressed="${S.time===h}">${hm(h*60)}</button>`).join("")}</div>
    <p class="hint">${S.time!=null?"✓ "+t("until",{t:hm(S.time*60)}):t("s4h")}</p>`;
   view.querySelectorAll(".slot:not(:disabled)").forEach(b=>b.onclick=()=>{S.time=+b.dataset.h;render()});
   next.disabled=S.time==null||!any;
 }
-
 function s5(){
   const e=S.errs;
-  view.innerHTML=`<h1>${t("s5")}</h1>
-   <div class="label">${t("loc")}</div>
+  view.innerHTML=`<h1>${t("s5")}</h1><div class="label">${t("loc")}</div>
    <div class="opts">
     <button class="opt" data-l="studio" aria-pressed="${S.loc==="studio"}"><span class="ico">🏠</span><span class="grow"><div class="t">${t("studio")}</div><div class="d">${t("studioD")}</div></span></button>
     <button class="opt" data-l="home" aria-pressed="${S.loc==="home"}"><span class="ico">🚗</span><span class="grow"><div class="t">${t("home")}</div><div class="d">${t("homeD")}</div></span></button>
@@ -392,7 +228,7 @@ function s5(){
     <button class="opt" data-a="in" aria-pressed="${S.area==="in"}"><span class="grow"><div class="t">${t("inCity")}</div><div class="d">+${rp(TRANSPORT.in)}</div></span></button>
     <button class="opt" data-a="out" aria-pressed="${S.area==="out"}"><span class="grow"><div class="t">${t("outCity")}</div><div class="d">+${rp(TRANSPORT.out)}</div></span></button></div>
     <div class="field" style="margin-top:14px"><label for="f-addr">${t("address")}</label><textarea id="f-addr" placeholder="${t("addressPh")}">${esc(S.addr)}</textarea>${e.addr?`<span class="err">${t("errAddr")}</span>`:""}</div>`:""}
-   <div class="label">${L==="id"?"Data Kakak":"Your details"}</div>
+   <div class="label">${t("you")}</div>
    <div class="field"><label for="f-name">${t("name")}</label><input id="f-name" autocomplete="name" placeholder="${t("namePh")}" value="${esc(S.name)}">${e.name?`<span class="err">${t("errName")}</span>`:""}</div>
    <div class="field"><label for="f-wa">${t("wa")}</label><input id="f-wa" inputmode="tel" autocomplete="tel" placeholder="${t("waPh")}" value="${esc(S.wa)}">${e.wa?`<span class="err">${t("errWa")}</span>`:""}</div>
    <div class="field"><label for="f-note">${t("note")}</label><textarea id="f-note" placeholder="${t("notePh")}">${esc(S.note)}</textarea></div>`;
@@ -401,25 +237,21 @@ function s5(){
   view.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{S.loc=b.dataset.l;render()});
   view.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{S.area=b.dataset.a;render()});
 }
-function valid5(){
-  const d=S.wa.replace(/[^\d]/g,"");
-  S.errs={name:!S.name.trim(),wa:!/^(0|62)8\d{7,11}$/.test(d),addr:S.loc==="home"&&!S.addr.trim()};
-  return !S.errs.name&&!S.errs.wa&&!S.errs.addr;
-}
+function valid5(){const d=S.wa.replace(/\D/g,"");S.errs={name:!S.name.trim(),wa:!/^(0|62)8\d{7,11}$/.test(d),addr:S.loc==="home"&&!S.addr.trim()};return !S.errs.name&&!S.errs.wa&&!S.errs.addr}
 
 function qrSvg(){
   const r=rnd(98321),n=25,c=[];
-  const finder=(x,y)=>`<rect x="${x}" y="${y}" width="7" height="7" fill="#111"/><rect x="${x+1}" y="${y+1}" width="5" height="5" fill="#fff"/><rect x="${x+2}" y="${y+2}" width="3" height="3" fill="#111"/>`;
+  const f=(x,y)=>`<rect x="${x}" y="${y}" width="7" height="7" fill="#111"/><rect x="${x+1}" y="${y+1}" width="5" height="5" fill="#fff"/><rect x="${x+2}" y="${y+2}" width="3" height="3" fill="#111"/>`;
   for(let y=0;y<n;y++)for(let x=0;x<n;x++){const inF=(x<8&&y<8)||(x>16&&y<8)||(x<8&&y>16);if(!inF&&r()<.48)c.push(`<rect x="${x}" y="${y}" width="1" height="1" fill="#111"/>`)}
-  return `<svg viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges" aria-label="QRIS">${c.join("")}${finder(0,0)}${finder(18,0)}${finder(0,18)}</svg>`;
+  return `<svg viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges" aria-label="QRIS">${c.join("")}${f(0,0)}${f(18,0)}${f(0,18)}</svg>`;
 }
-
+const PAY={qris:"QRIS",bank:"Transfer BCA",ewallet:"GoPay / OVO"};
 function s6(){
-  const s=svc(),p=pkg(),pr=prices(),len=totalMin();
+  const s=svc(),p=pkg(),pr=prices();
   view.innerHTML=`<h1>${t("s6")}</h1><p class="sub">${t("s6d")}</p>
    <div class="card">
-    <div class="row"><span>${t("service")}</span><span>${s.n[L]}</span></div>
-    <div class="row"><span>${t("pkg")}</span><span>${p.n[L]}</span></div>
+    <div class="row"><span>${t("service")}</span><span>${s.n[LANG]}</span></div>
+    <div class="row"><span>${t("pkg")}</span><span>${p.n[LANG]}</span></div>
     <div class="row"><span>${t("date")}</span><span>${fmtDate(S.date)}</span></div>
     <div class="row"><span>${t("time")}</span><span>${hm(S.time*60)}</span></div>
     <div class="row"><span>${t("location")}</span><span>${esc(locText())}</span></div>
@@ -430,49 +262,55 @@ function s6(){
    </div>
    <div class="due"><span>${t("dueNow")}</span><b>${rp(pr.dp)}</b></div>
    <div class="label">${t("method")}</div>
-   <div class="paygrid">${[["qris","QRIS"],["bank","Transfer BCA"],["ewallet","GoPay / OVO"]].map(([k,n])=>`<button class="paym" data-p="${k}" aria-pressed="${S.pay===k}">${n}</button>`).join("")}</div>
+   <div class="paygrid">${Object.entries(PAY).map(([k,n])=>`<button class="paym" data-p="${k}" aria-pressed="${S.pay===k}">${n}</button>`).join("")}</div>
    ${S.pay==="qris"?`<div class="qr">${qrSvg()}<span class="hint" style="margin:0">${t("qrisD")}</span></div>`:
-     S.pay==="bank"?`<div class="bank card">${t("bankD")} BCA<br><code>8270 1234 56</code><br>a.n. Shimmernaya</div>`:
-     `<div class="bank card">GoPay / OVO<br><code>0812 3456 7890</code></div>`}
+     S.pay==="bank"?`<div class="bank card">${t("bankD")}<br><code>${BIZ.bank}</code></div>`:`<div class="bank card">GoPay / OVO<br><code>${BIZ.wa}</code></div>`}
    <p class="hint" style="text-align:center">🔒 ${t("fake")}</p>`;
   view.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{S.pay=b.dataset.p;render()});
-  next.textContent=S.busy?"":t("pay",{x:rp(pr.dp)});
+  next.textContent=t("pay",{x:rp(pr.dp)});
   if(S.busy){next.innerHTML=`<span class="spin"></span> ${t("paying")}`;next.disabled=true}
 }
 
+/* Save the paid booking so it shows up on the admin page and blocks the slot */
+function saveBooking(){
+  const db=load(), s=svc(), p=pkg(), pr=prices(), len=totalMin(), ready=S.time*60;
+  const items=[{d:`${s.n.id} – ${p.n.id}`,q:1,p:p.p}];
+  if(S.n>1) items.push({d:"Orang tambahan",q:S.n-1,p:s.extra});
+  if(pr.tr) items.push({d:"Transport "+(S.area==="in"?"dalam kota":"luar kota"),q:1,p:pr.tr});
+  const b={id:"b"+Date.now(),code:newCode(db),src:"online",date:S.date,start:ready-len,end:ready,ready,name:S.name.trim(),wa:S.wa.trim(),svc:s.id,
+    label:{id:`${s.n.id} – ${p.n.id}`,en:`${s.n.en} – ${p.n.en}`},people:S.n,loc:S.loc==="studio"?"Studio Shimmernaya":S.addr.trim()+" ("+(S.area==="in"?"dalam kota":"luar kota")+")",
+    note:S.note.trim(),items,discount:0,dp:pr.dp,payMethod:PAY[S.pay],inv:"review",created:new Date().toISOString()};
+  db.bookings.push(b); save(db); return b;
+}
+
 function s7(){
-  const s=svc(),p=pkg(),pr=prices(),len=totalMin();
-  const mName={qris:"QRIS",bank:"Transfer BCA",ewallet:"GoPay / OVO"}[S.pay];
-  const v={name:S.name.trim(),wa:S.wa.trim(),svc:s.n[L],pkg:p.n[L],n:S.n,date:fmtDate(S.date),ready:hm(S.time*60),start:hm(S.time*60-len),dur:dur(len),loc:locText(),dp:rp(pr.dp),rem:rp(pr.rem),code:S.code,note:S.note.trim()||t("noNote"),method:mName};
-  const now=new Date(),clock=String(now.getHours()).padStart(2,"0")+"."+String(now.getMinutes()).padStart(2,"0");
+  bar.hidden=true;
+  const b=S.booking, s=svc(), p=pkg(), pr=prices(), len=totalMin();
+  const v={name:b.name,wa:b.wa,svc:s.n[LANG],pkg:p.n[LANG],n:S.n,date:fmtDate(S.date),ready:hm(b.ready),start:hm(b.start),dur:durTxt(len),loc:locText(),dp:rp(pr.dp),rem:rp(pr.rem),code:b.code,note:b.note||t("noNote"),method:b.payMethod};
+  const now=new Date(),clock=pad(now.getHours())+"."+pad(now.getMinutes());
+  const invUrl="admin.html#inv-"+b.code;
   view.innerHTML=`<div class="done"><div class="tick">✓</div><h1>${t("doneT")}</h1><p class="sub">${t("doneD",{n:esc(v.name),w:esc(v.wa)})}</p>
-   <div class="card" style="display:inline-block;padding:10px 18px">${t("code")}: <b>${S.code}</b></div></div>
+   <div class="card" style="display:inline-block;padding:10px 18px">${t("code")}: <b>${b.code}</b></div></div>
    <section class="demo"><h2>${t("demoClient")}</h2><div class="wa"><div class="hd"><div class="av">💄</div><div class="nm">Shimmernaya<small>Business account</small></div></div>
-    <div class="body"><div class="bub in">${esc(t("waClient",v))}<span class="tm">${clock}</span></div></div></div></section>
-   <section class="demo"><h2>${t("demoArtist")}</h2><div class="wa"><div class="hd"><div class="av">🔔</div><div class="nm">Booking Bot<small>${L==="id"?"Notifikasi otomatis":"Automatic alert"}</small></div></div>
-    <div class="body"><div class="bub in">${esc(t("waArtist",v))}<span class="tm">${clock}</span></div></div></div></section>
+    <div class="body"><div class="bub">${esc(t("waClient",v))}<span class="tm">${clock}</span></div></div></div></section>
+   <section class="demo"><h2>${t("demoArtist")}</h2><div class="wa"><div class="hd"><div class="av">🔔</div><div class="nm">Booking Bot<small>${LANG==="id"?"Notifikasi otomatis":"Automatic alert"}</small></div></div>
+    <div class="body"><div class="bub">${esc(t("waArtist",v))}<span class="tm">${clock}</span></div>
+    <div class="bub">${esc(t("invReady",{inv:invNo(b)}))}\n<a href="${invUrl}">${t("openInv")} →</a><span class="tm">${clock}</span></div></div></div></section>
    <section class="demo"><h2>${t("demoCal")}</h2><div class="ev"><div class="strip"></div><div style="min-width:0">
     <div class="t">💄 ${esc(v.svc)} – ${esc(v.name)} (${S.n})</div>
-    <div class="m">${v.date} · ${v.start} – ${v.ready} (${L==="id"?"siap":"ready"} ${v.ready})</div>
-    <div class="m">📍 ${esc(v.loc)}</div>
-    <div class="m">${esc(t("calNote",v))} · ${S.code}</div></div></div></section>
+    <div class="m">${v.date} · ${v.start} – ${v.ready}</div><div class="m">📍 ${esc(v.loc)}</div><div class="m">${b.code}</div></div></div></section>
+   <a class="btn" href="${invUrl}" style="display:block;margin-top:22px">📄 ${t("openInv")}</a>
    <button class="again" id="again">↺ ${t("again")}</button>`;
-  view.querySelector("#again").onclick=()=>{Object.assign(S,{step:1,svc:null,pkg:null,n:1,date:null,time:null,loc:"studio",area:"in",addr:"",name:"",wa:"",note:"",pay:"qris",month:0,errs:{},code:null});render();scrollTo(0,0)};
+  view.querySelector("#again").onclick=()=>{S=blank();render();scrollTo(0,0)};
 }
 
 next.onclick=()=>{
+  if(S.mode==="avail"){S.mode="flow";if(S.avSel&&dayStatus(S.avSel)!=="full"){S.date=S.avSel;S.month=S.avMonth}go(1);return}
   if(S.step===5&&!valid5()){render();return}
-  if(S.step===6){
-    S.busy=true;render();
-    setTimeout(()=>{S.busy=false;S.code="GLW-"+Math.floor(1000+Math.random()*9000);S.step=7;render();scrollTo(0,0)},1600);
-    return;
-  }
-  S.step++;render();scrollTo(0,0);
+  if(S.step===6){S.busy=true;render();setTimeout(()=>{S.busy=false;S.booking=saveBooking();go(7)},1600);return}
+  go(S.step+1);
 };
-back.onclick=()=>{if(S.step>1){S.step--;S.errs={};render();scrollTo(0,0)}};
-const setLang=l=>{L=l;document.getElementById("lang-id").setAttribute("aria-pressed",l==="id");document.getElementById("lang-en").setAttribute("aria-pressed",l==="en");render()};
-document.getElementById("lang-id").onclick=()=>setLang("id");
-document.getElementById("lang-en").onclick=()=>setLang("en");
+back.onclick=()=>{if(S.mode==="avail"){S.mode="flow";go(0);return}S.errs={};go(S.step-1)};
 render();
 </script>
 </body>
