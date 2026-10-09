@@ -41,8 +41,8 @@ id:{tagline:"Makeup Artist · Booking",swipe:"‹ geser untuk ganti bulan ›",s
  service:"Layanan",pkg:"Paket",date:"Tanggal",time:"Siap jam",location:"Lokasi",subtotal:"Paket × {n} orang",transport:"Transport",total:"Total",dueNow:"Bayar sekarang (DP 50%)",remain:"Sisa dibayar di hari H",
  method:"Metode pembayaran",qrisD:"Scan pakai e-wallet atau m-banking apa saja",bankD:"Transfer ke rekening",fake:"Simulasi — tidak ada uang yang dipotong",
  doneT:"Booking terkonfirmasi!",doneD:"Makasih, Kak {n}! Konfirmasi sudah dikirim ke WhatsApp {w}.",code:"Kode booking",
- demoClient:"Demo · WhatsApp yang diterima klien",demoArtist:"Demo · WhatsApp yang diterima MUA",demoCal:"Demo · Otomatis masuk kalender",
- again:"Ulangi demo",studioAddr:"Studio Shimmernaya",noNote:"Tidak ada catatan",
+ demoClient:"Demo · WhatsApp yang diterima klien",demoArtist:"Demo · WhatsApp yang diterima MUA",demoCal:"✓ Sudah otomatis masuk Google Calendar",
+ again:"Ulangi demo",loading:"Memuat jadwal…",loadErr:"Jadwal belum bisa dimuat. Cek koneksi lalu coba lagi.",retry:"Coba lagi",taken:"Maaf Kak, jam itu baru saja dibooking orang lain. Silakan pilih jam lain ya.",payErr:"Booking belum tersimpan. Coba sekali lagi ya.",studioAddr:"Studio Shimmernaya",noNote:"Tidak ada catatan",
  waClient:`Halo Kak {name}! 💕
 Booking kamu sudah terkonfirmasi ✅
 
@@ -91,8 +91,8 @@ en:{tagline:"Makeup Artist · Booking",swipe:"‹ swipe to change month ›",ste
  service:"Service",pkg:"Package",date:"Date",time:"Ready by",location:"Location",subtotal:"Package × {n} people",transport:"Travel",total:"Total",dueNow:"Pay now (50% deposit)",remain:"Remaining, paid on the day",
  method:"Payment method",qrisD:"Scan with any e-wallet or banking app",bankD:"Transfer to account",fake:"Simulation — no money is taken",
  doneT:"Booking confirmed!",doneD:"Thank you, {n}! A confirmation has been sent to WhatsApp {w}.",code:"Booking code",
- demoClient:"Demo · WhatsApp the client receives",demoArtist:"Demo · WhatsApp the artist receives",demoCal:"Demo · Added to the calendar automatically",
- again:"Restart demo",studioAddr:"Shimmernaya Studio",noNote:"No notes",
+ demoClient:"Demo · WhatsApp the client receives",demoArtist:"Demo · WhatsApp the artist receives",demoCal:"✓ Added to Google Calendar automatically",
+ again:"Restart demo",loading:"Loading availability…",loadErr:"Couldn't load availability. Check your connection and try again.",retry:"Try again",taken:"Sorry, someone just booked that time. Please pick another one.",payErr:"The booking wasn't saved. Please try once more.",studioAddr:"Shimmernaya Studio",noNote:"No notes",
  waClient:`Hi {name}! 💕
 Your booking is confirmed ✅
 
@@ -151,6 +151,15 @@ function render(){
   ({0:home,1:s1,2:s2,3:s3,4:s4,5:s5,6:s6,7:s7})[S.step]();
 }
 
+/* show a loader until the month's availability has come from the calendar */
+function calGate(base){
+  const st=monthState(base);
+  if(st==="ok"){loadMonth(new Date(base.getFullYear(),base.getMonth()+1,1)).catch(()=>{});return true}
+  if(st==="err"){view.insertAdjacentHTML("beforeend",`<div class="card" style="margin-top:14px;text-align:center"><p class="hint" style="margin:0 0 12px">${t("loadErr")}</p><button class="btn" id="retry" style="width:100%">${t("retry")}</button></div>`);
+    view.querySelector("#retry").onclick=()=>{MONTHS.delete(mkey(base));render()};return false}
+  view.insertAdjacentHTML("beforeend",`<div class="card" style="margin-top:14px;text-align:center;padding:40px 16px"><span class="spin"></span><p class="hint">${t("loading")}</p></div>`);
+  loadMonth(base).then(render,render); return false;
+}
 function home(){
   bar.hidden=true;
   view.innerHTML=`<h1 class="hero">${t("homeT")}</h1><p class="sub">${t("homeD")}</p>
@@ -165,6 +174,8 @@ function home(){
 /* Availability-only calendar: no service needed, browse 12 months */
 function avail(){
   const db=load(), base=new Date(TODAY.getFullYear(),TODAY.getMonth()+S.avMonth,1);
+  view.innerHTML=`<h1>${t("avT")}</h1><p class="sub">${t("avD")}</p>`;
+  if(!calGate(base)) return;
   const grid=monthGrid(base,(ds,d)=>{const st=dayStatus(ds,db);const past=st==="past";
     return `<button class="day ${st==="full"?"st-full":""} ${ds===iso(TODAY)?"today":""}" data-ds="${ds}" ${past?"disabled":""} aria-pressed="${S.avSel===ds}">${d}${past?"":`<i class="dot ${st==="open"?"ok":st==="limited"?"warn":"full"}"></i>`}</button>`});
   let panel=`<p class="hint">${t("avPick")}</p>`;
@@ -196,6 +207,8 @@ function s1(){
 }
 function s2(){
   const db=load(), base=new Date(TODAY.getFullYear(),TODAY.getMonth()+S.month,1), len=minLen();
+  view.innerHTML=`<h1>${t("s2")}</h1><p class="sub">${t("s2d")}</p>`;
+  if(!calGate(base)) return;
   const grid=monthGrid(base,(ds,d)=>{const past=fromIso(ds)<=TODAY, open=dayOpenFor(ds,len,db);
     return `<button class="day" data-ds="${ds}" ${open?"":"disabled"} aria-pressed="${S.date===ds}">${d}${!open&&!past?`<span class="full">${t("full")}</span>`:""}</button>`});
   view.innerHTML=`<h1>${t("s2")}</h1><p class="sub">${t("s2d")}</p>
@@ -218,12 +231,14 @@ function s3(){
   next.disabled=!S.pkg;
 }
 function s4(){
+  view.innerHTML=`<h1>${t("s4")}</h1>`;
+  if(!calGate(fromIso(S.date))) return;
   const db=load(), len=totalMin(), any=READY_SLOTS.some(h=>readyFree(S.date,h,len,db));
   if(S.time==null&&S.pref!=null&&readyFree(S.date,S.pref,len,db)) S.time=S.pref;
   view.innerHTML=`<h1>${t("s4")}</h1><p class="sub">${fmtDate(S.date)}<br>${t("s4d",{d:durTxt(len)})}</p>
    <div class="slots">${READY_SLOTS.map(h=>`<button class="slot" data-h="${h}" ${readyFree(S.date,h,len,db)?"":"disabled"} aria-pressed="${S.time===h}">${hm(h*60)}</button>`).join("")}</div>
-   <p class="hint">${S.time!=null?"✓ "+t("until",{t:hm(S.time*60)}):t("s4h")}</p>`;
-  view.querySelectorAll(".slot:not(:disabled)").forEach(b=>b.onclick=()=>{S.time=+b.dataset.h;render()});
+   <p class="hint">${S.time!=null?"✓ "+t("until",{t:hm(S.time*60)}):t("s4h")}</p>${S.taken?`<p class="notice">${t("taken")}</p>`:""}`;
+  view.querySelectorAll(".slot:not(:disabled)").forEach(b=>b.onclick=()=>{S.time=+b.dataset.h;S.taken=false;render()});
   next.disabled=S.time==null||!any;
 }
 function s5(){
@@ -274,22 +289,17 @@ function s6(){
    <div class="paygrid">${Object.entries(PAY).map(([k,n])=>`<button class="paym" data-p="${k}" aria-pressed="${S.pay===k}">${n}</button>`).join("")}</div>
    ${S.pay==="qris"?`<div class="qr">${qrSvg()}<span class="hint" style="margin:0">${t("qrisD")}</span></div>`:
      S.pay==="bank"?`<div class="bank card">${t("bankD")}<br><code>${BIZ.bank}</code></div>`:`<div class="bank card">GoPay / OVO<br><code>${BIZ.wa}</code></div>`}
-   <p class="hint" style="text-align:center">🔒 ${t("fake")}</p>`;
+   ${S.payErr?`<p class="notice">${t("payErr")}</p>`:""}<p class="hint" style="text-align:center">🔒 ${t("fake")}</p>`;
   view.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{S.pay=b.dataset.p;render()});
   next.textContent=t("pay",{x:rp(pr.dp)});
   if(S.busy){next.innerHTML=`<span class="spin"></span> ${t("paying")}`;next.disabled=true}
 }
 
-/* Save the paid booking so it shows up on the admin page and blocks the slot */
-function saveBooking(){
-  const db=load(), s=svc(), p=pkg(), pr=prices(), len=totalMin(), ready=S.time*60;
-  const items=[{d:`${s.n.id} – ${p.n.id}`,q:1,p:p.p}];
-  if(S.n>1) items.push({d:"Orang tambahan",q:S.n-1,p:s.extra});
-  if(pr.tr) items.push({d:"Transport "+(S.area==="in"?"dalam kota":"luar kota"),q:1,p:pr.tr});
-  const b={id:"b"+Date.now(),code:newCode(db),src:"online",date:S.date,start:ready-len,end:ready,ready,name:S.name.trim(),wa:S.wa.trim(),svc:s.id,
-    label:{id:`${s.n.id} – ${p.n.id}`,en:`${s.n.en} – ${p.n.en}`},people:S.n,loc:S.loc==="studio"?"Studio Shimmernaya":S.addr.trim()+" ("+(S.area==="in"?"dalam kota":"luar kota")+")",
-    note:S.note.trim(),items,discount:0,dp:pr.dp,payMethod:PAY[S.pay],inv:"review",created:new Date().toISOString()};
-  db.bookings.push(b); save(db); return b;
+/* Send the paid booking to the backend: it re-checks the slot, saves it and adds it to Google Calendar */
+async function saveBooking(){
+  const r=await api("book",{method:"POST",body:{svc:S.svc,pkg:S.pkg,people:S.n,date:S.date,ready:S.time,loc:S.loc,area:S.area,addr:S.addr,name:S.name,wa:S.wa,note:S.note,pay:PAY[S.pay]}});
+  resetAvailability();
+  return {code:r.code,date:r.date,name:r.name,wa:r.wa,ready:r.ready_min,start:r.start_min,note:r.note,payMethod:r.pay_method};
 }
 
 function s7(){
@@ -316,7 +326,11 @@ function s7(){
 next.onclick=()=>{
   if(S.mode==="avail"){S.mode="flow";if(S.avSel&&dayStatus(S.avSel)!=="full"){S.date=S.avSel;S.month=S.avMonth}go(1);return}
   if(S.step===5&&!valid5()){render();return}
-  if(S.step===6){S.busy=true;render();setTimeout(()=>{S.busy=false;S.booking=saveBooking();go(7)},1600);return}
+  if(S.step===6){S.busy=true;S.payErr=false;render();
+    setTimeout(async()=>{
+      try{S.booking=await saveBooking();S.busy=false;go(7)}
+      catch(e){S.busy=false;if(e.status===409){resetAvailability();S.time=null;S.taken=true;go(4)}else{S.payErr=true;render()}}
+    },1200);return}
   go(S.step+1);
 };
 back.onclick=()=>{if(S.mode==="avail"){S.mode="flow";go(0);return}S.errs={};go(S.step-1)};

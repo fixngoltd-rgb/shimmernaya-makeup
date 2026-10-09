@@ -1,6 +1,5 @@
-/* Shimmernaya — shared data for the booking page and the admin page.
-   TEMPORARY: everything is stored in this browser (localStorage). No backend yet,
-   so the admin page and booking page only sync on the same phone + browser. */
+/* Shimmernaya — shared code for the booking page and the admin page.
+   Data comes from the TEST backend (Supabase + Google Calendar pooltrialwp@gmail.com). */
 const BIZ={name:"Shimmernaya",wa:"0812 3456 7890",city:"Indonesia",bank:"BCA 8270 1234 56 a.n. Shimmernaya"};
 
 const SERVICES=[
@@ -42,42 +41,48 @@ const waIntl=w=>{let d=String(w||"").replace(/\D/g,"");if(d.startsWith("0"))d="6
 function rnd(seed){let x=seed%2147483647||1;return()=>(x=x*16807%2147483647)/2147483647}
 const svcById=id=>SERVICES.find(s=>s.id===id);
 
-/* ---------- store ---------- */
-const KEY="shimmer_v1";
-function load(){try{return JSON.parse(localStorage.getItem(KEY))||{bookings:[],seq:1}}catch(e){return{bookings:[],seq:1}}}
-function save(db){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}}
-function newCode(db){const n=db.seq++;return "SHM-"+String(1000+n)}
+/* ---------- backend (TEST Supabase project) ---------- */
+const API="https://mfvatfblmucyjalbjvnx.supabase.co/functions/v1/api";
+async function api(a,{method="GET",body=null,params={},pin=null}={}){
+  const q=new URLSearchParams({a,...params});
+  const headers={"Content-Type":"application/json"}; if(pin) headers["x-admin-pin"]=pin;
+  const r=await fetch(API+"?"+q,{method,headers,body:body?JSON.stringify(body):undefined});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok){const e=new Error(j.error||("HTTP "+r.status));e.status=r.status;throw e}
+  return j;
+}
 function invNo(b){return "INV-"+b.date.slice(0,4)+"-"+b.code.slice(4)}
+/* kept so older calls still work; real data now lives in the backend */
+function load(){return {bookings:[]}}
+function save(){}
 
-/* ---------- example bookings (stand-in for her real calendar) ---------- */
-const FAKE_NAMES=["Siti Rahma","Dewi Anggraini","Putri Ayu","Nadia Salsabila","Rina Marlina","Intan Permata","Fitri Handayani","Maya Sari","Ayu Lestari","Bunga Citra","Tiara Andini","Laras Wulandari"];
-const exCache={};
-function examplesFor(dateStr){
-  if(exCache[dateStr]) return exCache[dateStr];
-  const d=fromIso(dateStr), r=rnd(d.getFullYear()*400+d.getMonth()*32+d.getDate()+7), out=[];
-  const wk=d.getDay()===0||d.getDay()===6;
-  if(r()<(wk?.22:.08)){
-    out.push({id:"ex-"+dateStr,src:"example",date:dateStr,start:5*60,end:20*60,ready:null,name:FAKE_NAMES[Math.floor(r()*FAKE_NAMES.length)],svc:"bridal",label:{id:"Pengantin – Akad + Resepsi",en:"Bridal – Ceremony + Reception"},people:3});
-  }else{
-    const c=r()<.35?0:(r()<.55?1:2);
-    for(let i=0;i<c;i++){const s=(6+Math.floor(r()*9))*60,len=(2+Math.floor(r()*3))*60;const sv=SERVICES[1+Math.floor(r()*4)];
-      out.push({id:"ex-"+dateStr+"-"+i,src:"example",date:dateStr,start:s,end:s+len,ready:s+len,name:FAKE_NAMES[Math.floor(r()*FAKE_NAMES.length)],svc:sv.id,label:{id:sv.n.id,en:sv.n.en},people:1+Math.floor(r()*2)});}
-  }
-  return exCache[dateStr]=out;
+/* ---------- availability (from her Google Calendar + bookings) ---------- */
+const BUSY={}, MONTHS=new Map(); // month key -> "ok" | Promise | "err"
+const mkey=d=>d.getFullYear()+"-"+pad(d.getMonth()+1);
+function monthState(base){return MONTHS.get(mkey(base))}
+function loadMonth(base){
+  const k=mkey(base); const st=MONTHS.get(k); if(st==="ok"||st instanceof Promise) return st instanceof Promise?st:Promise.resolve();
+  const from=iso(new Date(base.getFullYear(),base.getMonth(),1)), to=iso(new Date(base.getFullYear(),base.getMonth()+1,0));
+  const pr=api("availability",{params:{from,to}}).then(j=>{
+    for(let d=new Date(base.getFullYear(),base.getMonth(),1);d.getMonth()===base.getMonth();d.setDate(d.getDate()+1)) BUSY[iso(d)]=[];
+    Object.entries(j.days||{}).forEach(([ds,list])=>BUSY[ds]=list.map(([s,e])=>({start:s,end:e})));
+    MONTHS.set(k,"ok");
+  }).catch(e=>{MONTHS.set(k,"err");throw e});
+  MONTHS.set(k,pr); return pr;
 }
-function entriesFor(dateStr,db){db=db||load();return [...examplesFor(dateStr),...db.bookings.filter(b=>b.date===dateStr)].sort((a,b)=>a.start-b.start)}
+function resetAvailability(){MONTHS.clear();for(const k in BUSY) delete BUSY[k]}
+function entriesFor(dateStr){return (BUSY[dateStr]||[]).slice().sort((a,b)=>a.start-b.start)}
 
-/* ---------- availability ---------- */
-function readyFree(dateStr,readyH,len,db){
+function readyFree(dateStr,readyH,len){
   const e=readyH*60,s=e-len; if(s<EARLIEST||e>DAY_END) return false;
-  return !entriesFor(dateStr,db).some(x=>s<x.end+BUFFER && e>x.start-BUFFER);
+  return !entriesFor(dateStr).some(x=>s<x.end+BUFFER && e>x.start-BUFFER);
 }
-function dayStatus(dateStr,db,len=90){
+function dayStatus(dateStr,_db,len=90){
   if(fromIso(dateStr)<=TODAY) return "past";
-  const free=READY_SLOTS.filter(h=>readyFree(dateStr,h,len,db)).length;
+  const free=READY_SLOTS.filter(h=>readyFree(dateStr,h,len)).length;
   return free===0?"full":free<=5?"limited":"open";
 }
-function dayOpenFor(dateStr,len,db){return fromIso(dateStr)>TODAY && READY_SLOTS.some(h=>readyFree(dateStr,h,len,db))}
+function dayOpenFor(dateStr,len){return fromIso(dateStr)>TODAY && READY_SLOTS.some(h=>readyFree(dateStr,h,len))}
 
 /* ---------- shared UI bits ---------- */
 function langToggle(onChange){
