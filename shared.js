@@ -1,5 +1,5 @@
 /* Shimmernaya — shared code for the booking page and the admin page.
-   Data comes from the TEST backend (Supabase + Google Calendar pooltrialwp@gmail.com). */
+   TEMPORARY: no backend. Placeholder calendar, bookings saved in this browser, Telegram test bot for messages. */
 const BIZ={name:"Shimmernaya",wa:"0812 3456 7890",city:"Indonesia",bank:"BCA 8270 1234 56 a.n. Shimmernaya"};
 
 const SERVICES=[
@@ -41,15 +41,140 @@ const waIntl=w=>{let d=String(w||"").replace(/\D/g,"");if(d.startsWith("0"))d="6
 function rnd(seed){let x=seed%2147483647||1;return()=>(x=x*16807%2147483647)/2147483647}
 const svcById=id=>SERVICES.find(s=>s.id===id);
 
-/* ---------- backend (TEST Supabase project) ---------- */
-const API="https://mfvatfblmucyjalbjvnx.supabase.co/functions/v1/api";
+/* ---------- TEMPORARY local backend (no Supabase) ----------
+   Calendar = placeholder busy times. Bookings are saved in this browser only.
+   Messages go straight to the TEST Telegram bot (@shimmernaya_test_bot).
+   The bot token is visible in this file: it's a throwaway test bot — revoke it in @BotFather before going live. */
+const TG_TOKEN="8966584771:AAF95KIZ2XS3jeCkZXbeHpRM1UiEjzMfWFc", TG_BOT="shimmernaya_test_bot", TG_ADMIN_START="admin_k7Q2mZ9x";
+const ADMIN_PIN="2580", SITE_ADMIN=location.href.replace(/[^/]*([?#].*)?$/,"")+"admin.html#inv-";
+const MKEY="shimmer_mock_v1";
+const mload=()=>{try{return JSON.parse(localStorage.getItem(MKEY))||{bookings:[],seq:1001}}catch(e){return{bookings:[],seq:1001}}};
+const msave=db=>{try{localStorage.setItem(MKEY,JSON.stringify(db))}catch(e){}};
+class ApiErr extends Error{constructor(status,msg){super(msg);this.status=status}}
+
+/* placeholder "her calendar": a few fixed busy blocks per day */
+function placeholderBusy(ds){
+  const d=fromIso(ds), r=rnd(d.getFullYear()*400+d.getMonth()*32+d.getDate()+7), wk=d.getDay()===0||d.getDay()===6, out=[];
+  if(r()<(wk?.18:.06)) return [{start:0,end:1440,title:"Contoh: penuh seharian",allDay:true}];
+  const c=r()<.4?0:(r()<.6?1:2);
+  for(let i=0;i<c;i++){const s=(6+Math.floor(r()*9))*60;out.push({start:s,end:s+(2+Math.floor(r()*3))*60,title:"Contoh jadwal",allDay:false})}
+  return out;
+}
+const busyOn=(ds,db,skipId)=>[...placeholderBusy(ds),...db.bookings.filter(b=>b.date===ds&&b.id!==skipId).map(b=>({start:b.start_min,end:b.end_min}))];
+const clash=(list,s,e,buf)=>list.some(x=>s<x.end+buf&&e>x.start-buf);
+const fmtID=ds=>fromIso(ds).toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+
+/* ---------- Telegram, straight from the browser ---------- */
+let tgReady=null;
+async function tg(method,body){
+  const r=await fetch(`https://api.telegram.org/bot${TG_TOKEN}/${method}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body||{})});
+  return r.json();
+}
+// the old webhook pointed at the paused backend; it must go for getUpdates to work
+function tgInit(){return tgReady||(tgReady=tg("deleteWebhook",{drop_pending_updates:false}).catch(()=>{}))}
+async function tgStarts(param){ // chat ids that sent "/start <param>" (Telegram keeps these ~24h)
+  await tgInit();
+  const j=await tg("getUpdates",{allowed_updates:["message"],timeout:0});
+  if(!j.ok) return [];
+  return [...new Set((j.result||[]).map(u=>u.message).filter(m=>m&&String(m.text||"").trim()===`/start ${param}`).map(m=>m.chat.id))];
+}
+async function adminChats(){
+  let cached=[];try{cached=JSON.parse(localStorage.getItem("shimmer_tg_admins"))||[]}catch(e){}
+  const found=await tgStarts(TG_ADMIN_START).catch(()=>[]);
+  const fresh=found.filter(c=>!cached.includes(c));
+  for(const c of fresh) await tg("sendMessage",{chat_id:c,text:"✅ Akun ini sekarang menerima notifikasi booking baru Shimmernaya (tes)."});
+  const all=[...new Set([...cached,...found])];
+  try{localStorage.setItem("shimmer_tg_admins",JSON.stringify(all))}catch(e){}
+  return all;
+}
+async function tgNotifyAdmin(b){
+  const label=`${b.label_id}${b.people>1?` (${b.people} orang)`:""}`;
+  const text=`🔔 Booking baru, DP sudah masuk\n\n👤 ${b.name} (${b.wa})\n💄 ${label}\n📅 ${fmtID(b.date)}\n⏰ Klien siap jam ${hm(b.ready_min)}, saran mulai makeup ${hm(b.start_min)}\n📍 ${b.loc}\n💰 DP ${rp(b.dp)}${b.note?`\n📝 ${b.note}`:""}\n\nKode: ${b.code}`;
+  const chats=await adminChats();
+  if(!chats.length) return "failed: admin belum tekan Start di bot";
+  let res="sent";
+  for(const c of chats){const r=await tg("sendMessage",{chat_id:c,text,reply_markup:{inline_keyboard:[[{text:"📄 Cek & kirim invoice",url:SITE_ADMIN+b.code}]]}});if(!r.ok)res="failed: "+(r.description||"telegram")}
+  return res;
+}
+function clientConfirmText(b){
+  const label=`${b.label_id}${b.people>1?` (${b.people} orang)`:""}`;
+  return `Halo Kak ${b.name}! 💕\nDP ${rp(b.dp)} untuk booking ${b.code} sudah kami terima ✅\n\n💄 ${label}\n📅 ${fmtID(b.date)}\n⏰ Kakak siap jam ${hm(b.ready_min)}\n📍 ${b.loc}\n\nJadwal Kakak sudah dikunci. Invoice resmi menyusul dari kami setelah dicek, dan H-1 kami kabari jam mulai makeup. Sampai ketemu! 🤍\n— Shimmernaya`;
+}
+// called by the booking page while it waits for the client to press Start
+async function tgCheckClient(code){
+  const db=mload(), b=db.bookings.find(x=>x.code===code); if(!b) return null;
+  if(b.tg_client==="sent") return "sent";
+  const chats=await tgStarts(code).catch(()=>[]);
+  if(!chats.length) return null;
+  const r=await tg("sendMessage",{chat_id:chats[0],text:clientConfirmText(b)});
+  const db2=mload(), bb=db2.bookings.find(x=>x.code===code);
+  bb.tg_chat=chats[0]; bb.tg_client=r.ok?"sent":"failed: "+(r.description||""); msave(db2);
+  return bb.tg_client;
+}
+
+/* ---------- same actions the real backend had ---------- */
 async function api(a,{method="GET",body=null,params={},pin=null}={}){
-  const q=new URLSearchParams({a,...params});
-  const headers={"Content-Type":"application/json"}; if(pin) headers["x-admin-pin"]=pin;
-  const r=await fetch(API+"?"+q,{method,headers,body:body?JSON.stringify(body):undefined});
-  const j=await r.json().catch(()=>({}));
-  if(!r.ok){const e=new Error(j.error||("HTTP "+r.status));e.status=r.status;throw e}
-  return j;
+  const db=mload();
+  if(a==="availability"){
+    const days={};
+    for(let d=fromIso(params.from);d<=fromIso(params.to);d.setDate(d.getDate()+1)){const ds=iso(d);days[ds]=busyOn(ds,db).map(x=>[x.start,x.end])}
+    return {days};
+  }
+  if(a==="book"){
+    const s=svcById(body.svc), k=s?.pk.find(p=>p.id===body.pkg); if(!s||!k) throw new ApiErr(400,"unknown service");
+    const people=Math.max(1,Math.min(6,+body.people||1)), ready=+body.ready*60, len=k.m+EXTRA_MIN*(people-1), start=ready-len;
+    if(clash(busyOn(body.date,db),start,ready,BUFFER)) throw new ApiErr(409,"slot taken");
+    const area=body.loc==="home"?(body.area==="out"?"out":"in"):null;
+    const items=[{d:`${s.n.id} – ${k.n.id}`,q:1,p:k.p}];
+    if(people>1) items.push({d:"Orang tambahan",q:people-1,p:s.extra});
+    if(area) items.push({d:"Transport "+(area==="in"?"dalam kota":"luar kota"),q:1,p:TRANSPORT[area]});
+    const total=items.reduce((x,i)=>x+i.q*i.p,0), dp=Math.ceil(total/2/1000)*1000;
+    const b={id:"b"+Date.now(),code:"SHM-"+(db.seq++),src:"online",date:body.date,start_min:start,end_min:ready,ready_min:ready,
+      name:String(body.name||"").trim(),wa:String(body.wa||"").trim(),svc:body.svc,label_id:`${s.n.id} – ${k.n.id}`,label_en:`${s.n.en} – ${k.n.en}`,
+      people,loc:area?`${String(body.addr||"").trim()} (${area==="in"?"dalam kota":"luar kota"})`:"Studio Shimmernaya",note:String(body.note||"").trim(),
+      items,discount:0,dp,pay_method:body.pay||"",inv:"review",inv_note:""};
+    db.bookings.push(b); msave(db);
+    let alert; try{alert=await tgNotifyAdmin(b)}catch(e){alert="failed: tidak bisa menghubungi Telegram"}
+    const db2=mload(); db2.bookings.find(x=>x.id===b.id).tg_alert=alert; msave(db2);
+    return {...b,tg_alert:alert,tg_link:`https://t.me/${TG_BOT}?start=${b.code}`,calendar:false};
+  }
+  if(pin!==ADMIN_PIN) throw new ApiErr(401,"wrong PIN");
+  adminChats().catch(()=>{}); // links any admin who pressed Start
+  if(a==="pin") return {ok:true};
+  if(a==="list"){
+    const external=[];
+    for(let d=fromIso(params.from);d<=fromIso(params.to);d.setDate(d.getDate()+1)){const ds=iso(d);placeholderBusy(ds).forEach((x,i)=>external.push({id:"p:"+ds+":"+i,date:ds,start:x.start,end:x.end,title:x.title,allDay:x.allDay}))}
+    return {bookings:db.bookings.filter(b=>b.date>=params.from&&b.date<=params.to),external};
+  }
+  if(a==="save"){
+    const isBlock=body.src==="block";
+    if(clash(busyOn(body.date,db,body.id),+body.start_min,+body.end_min,0)) throw new ApiErr(409,"clash");
+    let b=body.id?db.bookings.find(x=>x.id===body.id):null;
+    if(!b){b={id:"m"+Date.now(),code:"SHM-"+(db.seq++),src:isBlock?"block":"manual",inv:"review",items:[],discount:0,dp:0,inv_note:""};db.bookings.push(b)}
+    Object.assign(b,{date:body.date,start_min:+body.start_min,end_min:+body.end_min,ready_min:isBlock?null:+body.end_min});
+    if(isBlock) Object.assign(b,{reason:body.reason||"",name:"",people:0});
+    else Object.assign(b,{name:body.name,wa:body.wa,svc:body.svc,label_id:body.label,label_en:body.label,people:body.people,loc:body.loc,note:body.note,dp:+body.dp||0,...(body.items?{items:body.items}:{})});
+    msave(db); return b;
+  }
+  if(a==="delete"){db.bookings=db.bookings.filter(x=>x.id!==body.id);msave(db);return {ok:true}}
+  if(a==="invoice"){
+    const b=db.bookings.find(x=>x.id===body.id); if(!b) throw new ApiErr(404,"not found");
+    if(body.items) b.items=body.items; if(body.discount!=null) b.discount=+body.discount||0; if(body.dp!=null) b.dp=+body.dp||0;
+    if(body.inv_note!=null) b.inv_note=body.inv_note; if(body.inv) b.inv=body.inv; msave(db); return b;
+  }
+  if(a==="send_invoice"){
+    const b=db.bookings.find(x=>x.id===body.id); if(!b) throw new ApiErr(404,"not found");
+    let chat=b.tg_chat; if(!chat){const c=await tgStarts(b.code).catch(()=>[]);chat=c[0]}
+    if(!chat) throw new ApiErr(409,"no_tg");
+    const bytes=Uint8Array.from(atob(body.pdf),c=>c.charCodeAt(0)), fd=new FormData();
+    fd.append("chat_id",String(chat));
+    fd.append("caption",`Halo Kak ${b.name}, ini invoice resmi untuk booking ${b.code} (${fmtID(b.date)}). Terima kasih sudah memilih Shimmernaya 🤍`);
+    fd.append("document",new Blob([bytes],{type:"application/pdf"}),body.filename||`Invoice-${b.code}.pdf`);
+    const r=await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendDocument`,{method:"POST",body:fd}).then(x=>x.json());
+    if(!r.ok) throw new ApiErr(502,"telegram: "+(r.description||"send failed"));
+    const db2=mload(), bb=db2.bookings.find(x=>x.id===b.id); bb.tg_chat=chat; bb.inv="sent"; msave(db2); return bb;
+  }
+  throw new ApiErr(404,"unknown action");
 }
 function invNo(b){return "INV-"+b.date.slice(0,4)+"-"+b.code.slice(4)}
 /* kept so older calls still work; real data now lives in the backend */
