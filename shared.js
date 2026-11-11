@@ -79,7 +79,8 @@ async function tgStarts(param){ // chat ids that sent "/start <param>" (Telegram
   return [...new Set((j.result||[]).map(u=>u.message).filter(m=>m&&String(m.text||"").trim()===`/start ${param}`).map(m=>m.chat.id))];
 }
 async function adminChats(){
-  let cached=[];try{cached=JSON.parse(localStorage.getItem("shimmer_tg_admins"))||[]}catch(e){}
+  let cached=[5862632738]; // admin account linked 11 Nov 2026
+  try{cached=[...new Set([...cached,...(JSON.parse(localStorage.getItem("shimmer_tg_admins"))||[])])]}catch(e){}
   const found=await tgStarts(TG_ADMIN_START).catch(()=>[]);
   const fresh=found.filter(c=>!cached.includes(c));
   for(const c of fresh) await tg("sendMessage",{chat_id:c,text:"✅ Akun ini sekarang menerima notifikasi booking baru Shimmernaya (tes)."});
