@@ -183,7 +183,9 @@ function cal(){
   const grid=monthGrid(base,(ds,d)=>{const es=entriesFor(ds,db);
     return `<button class="day ${ds===iso(TODAY)?"today":""}" data-ds="${ds}" aria-pressed="${A.sel===ds}">${d}<span class="cnt">${es.slice(0,3).map(e=>`<i class="${e.src==="block"?"b":""}"></i>`).join("")}</span></button>`});
   const es=entriesFor(A.sel,db);
+  let tgAdm=[],tgNm={};try{tgAdm=JSON.parse(localStorage.getItem("shimmer_tg_admins")||"[]");tgNm=JSON.parse(localStorage.getItem("shimmer_tg_names")||"{}")}catch(e){}
   view.innerHTML=`${tabs()}<p class="notice">${t("demoNote")}</p>
+   <p class="hint">Telegram: ${tgAdm.length?tgAdm.map(c=>`${esc(tgNm[c]||"?")} (${c})`).join(", "):"-"}</p>
    <div class="cal" style="margin-top:14px"><div class="calhead"><button class="nav" id="pm" ${A.month<=-6?"disabled":""} aria-label="prev">‹</button><b>${monthName(base)}</b><button class="nav" id="nm" ${A.month>=11?"disabled":""} aria-label="next">›</button></div>${grid}</div>
    <div class="label">${fmtDate(A.sel)}</div>
    <div class="list">${es.length?es.map(b=>`<button class="item" data-id="${b.id}"><span class="tm">${timeTxt(b)}</span><span class="grow"><div class="n">${esc(b.src==="block"?labelOf(b):b.name)}</div><div class="s">${esc(b.src==="block"?"":b.src==="google"?"Contoh":labelOf(b)+" · "+b.people+" "+(LANG==="id"?"orang":"ppl"))}</div><div style="margin-top:4px">${chipFor(b)}</div></span></button>`).join(""):`<p class="hint" style="margin:0">${t("none")}</p>`}</div>

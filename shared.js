@@ -76,7 +76,9 @@ async function tgStarts(param){ // chat ids that sent "/start <param>" (Telegram
   await tgInit();
   const j=await tg("getUpdates",{allowed_updates:["message"],timeout:0});
   if(!j.ok) return [];
-  return [...new Set((j.result||[]).map(u=>u.message).filter(m=>m&&String(m.text||"").trim()===`/start ${param}`).map(m=>m.chat.id))];
+  const ms=(j.result||[]).map(u=>u.message).filter(m=>m&&String(m.text||"").trim()===`/start ${param}`);
+  try{const nm=JSON.parse(localStorage.getItem("shimmer_tg_names")||"{}");ms.forEach(m=>nm[m.chat.id]=(m.from&&m.from.first_name)||"");localStorage.setItem("shimmer_tg_names",JSON.stringify(nm))}catch(e){}
+  return [...new Set(ms.map(m=>m.chat.id))];
 }
 async function adminChats(){
   let cached=[5862632738]; // admin account linked 11 Nov 2026
@@ -140,7 +142,7 @@ async function api(a,{method="GET",body=null,params={},pin=null}={}){
     return {...b,tg_alert:alert,tg_link:`https://t.me/${TG_BOT}?start=${b.code}`,calendar:false};
   }
   if(pin!==ADMIN_PIN) throw new ApiErr(401,"wrong PIN");
-  adminChats().catch(()=>{}); // links any admin who pressed Start
+  if(!window.__tgChecked){window.__tgChecked=true;adminChats().then(()=>{try{render()}catch(e){}}).catch(()=>{})} // links any admin who pressed Start
   if(a==="pin") return {ok:true};
   if(a==="list"){
     const external=[];
