@@ -43,9 +43,9 @@ const svcById=id=>SERVICES.find(s=>s.id===id);
 
 /* ---------- TEMPORARY local backend (no Supabase) ----------
    Calendar = placeholder busy times. Bookings are saved in this browser only.
-   Messages go straight to the TEST Telegram bot (@shimmernaya_test_bot).
-   The bot token is visible in this file: it's a throwaway test bot — revoke it in @BotFather before going live. */
-const TG_TOKEN="8966584771:AAF95KIZ2XS3jeCkZXbeHpRM1UiEjzMfWFc", TG_BOT="shimmernaya_test_bot", TG_ADMIN_START="admin_k7Q2mZ9x";
+   Messages go to the TEST Telegram bot (@shimmernaya_test_bot) through a small relay function
+   (Telegram's bot server can't be reached from browsers in Pakistan). */
+const TG_RELAY="https://akbsxkmrbxspzzcsgpps.supabase.co/functions/v1/shimmernaya-tg-relay", TG_BOT="shimmernaya_test_bot", TG_ADMIN_START="admin_k7Q2mZ9x";
 const ADMIN_PIN="2580", SITE_ADMIN=location.href.replace(/[^/]*([?#].*)?$/,"")+"admin.html#inv-";
 const MKEY="shimmer_mock_v1";
 const mload=()=>{try{return JSON.parse(localStorage.getItem(MKEY))||{bookings:[],seq:1001}}catch(e){return{bookings:[],seq:1001}}};
@@ -67,7 +67,7 @@ const fmtID=ds=>fromIso(ds).toLocaleDateString("id-ID",{weekday:"long",day:"nume
 /* ---------- Telegram, straight from the browser ---------- */
 let tgReady=null;
 async function tg(method,body){
-  const r=await fetch(`https://api.telegram.org/bot${TG_TOKEN}/${method}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body||{})});
+  const r=await fetch(`${TG_RELAY}?m=${method}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body||{})});
   return r.json();
 }
 // the old webhook pointed at the paused backend; it must go for getUpdates to work
@@ -170,7 +170,7 @@ async function api(a,{method="GET",body=null,params={},pin=null}={}){
     fd.append("chat_id",String(chat));
     fd.append("caption",`Halo Kak ${b.name}, ini invoice resmi untuk booking ${b.code} (${fmtID(b.date)}). Terima kasih sudah memilih Shimmernaya 🤍`);
     fd.append("document",new Blob([bytes],{type:"application/pdf"}),body.filename||`Invoice-${b.code}.pdf`);
-    const r=await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendDocument`,{method:"POST",body:fd}).then(x=>x.json());
+    const r=await fetch(`${TG_RELAY}?m=sendDocument`,{method:"POST",body:fd}).then(x=>x.json());
     if(!r.ok) throw new ApiErr(502,"telegram: "+(r.description||"send failed"));
     const db2=mload(), bb=db2.bookings.find(x=>x.id===b.id); bb.tg_chat=chat; bb.inv="sent"; msave(db2); return bb;
   }
